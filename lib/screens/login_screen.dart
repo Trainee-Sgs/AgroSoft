@@ -635,7 +635,7 @@ class _LoginScreenState extends State<LoginScreen>
                             Container(
                               decoration: BoxDecoration(
                                 color: _C.bg,
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius: BorderRadius.circular(19),
                                 border: Border.all(color: _C.border),
                               ),
                               child: Row(

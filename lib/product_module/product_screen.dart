@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../purchase_module/purchase_home.dart';
 import '../theme/app_theme.dart';
+import '../screens/dashboard_screen.dart';
 
 // ── Color palette ──────────────────────────────────────────────────────────
 class _C {
@@ -93,7 +95,7 @@ class _ProductScreenState extends State<ProductScreen>
   final List<ProductItem> _savedProducts = [];
 
   // ── Collapsible card states ───────────────────────────────────────────────
-  bool _basicExpanded          = false;
+  bool _basicExpanded          = true;   // Open by default
   bool _classificationExpanded = false;
   bool _pricingExpanded        = false;
 
@@ -135,7 +137,7 @@ class _ProductScreenState extends State<ProductScreen>
   void initState() {
     super.initState();
     _basicAnim = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 260), value: 0.0);
+        vsync: this, duration: const Duration(milliseconds: 260), value: 1.0); // Start open
     _classAnim = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 260), value: 0.0);
     _priceAnim = AnimationController(
@@ -152,9 +154,24 @@ class _ProductScreenState extends State<ProductScreen>
     super.dispose();
   }
 
-  void _toggleSection(bool current, Function(bool) setter, AnimationController anim) {
+  /// Accordion-style toggle: Open current card, close others
+  void _toggleSectionAccordion(
+      bool current,
+      Function(bool) setter,
+      AnimationController anim,
+      AnimationController other1,
+      AnimationController other2,
+      ) {
     setter(!current);
-    !current ? anim.forward() : anim.reverse();
+    if (!current) {
+      // Opening this card - close others
+      anim.forward();
+      other1.reverse();
+      other2.reverse();
+    } else {
+      // Closing this card
+      anim.reverse();
+    }
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
@@ -252,6 +269,7 @@ class _ProductScreenState extends State<ProductScreen>
     return Scaffold(
       backgroundColor: _C.bg,
       resizeToAvoidBottomInset: true,
+      bottomNavigationBar: buildAppBottomNav(context, 3),
       body: Column(
         children: [
           _buildHeader(),
@@ -314,11 +332,11 @@ class _ProductScreenState extends State<ProductScreen>
                     icon: const Icon(Icons.arrow_back_ios_new_rounded,
                         color: Colors.white, size: 20),
                     onPressed: () {
-                      if (Navigator.canPop(context)) {
-                        Navigator.pop(context);
-                      } else {
-                        widget.onBack?.call();
-                      }
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (_) => const PurchaseHomeScreen()),
+                            (route) => false,
+                      );
                     },
                     constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
                     padding: const EdgeInsets.all(8),
@@ -334,13 +352,13 @@ class _ProductScreenState extends State<ProductScreen>
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
+              padding: const EdgeInsets.fromLTRB(16, 2, 16, 10),
               child: Container(
-                height: 46,
+                height: 48,
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(
                   children: [
@@ -378,6 +396,7 @@ class _ProductScreenState extends State<ProductScreen>
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 220),
           curve: Curves.easeInOut,
+          height: double.infinity,
           decoration: BoxDecoration(
             color: active ? Colors.white : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
@@ -422,10 +441,12 @@ class _ProductScreenState extends State<ProductScreen>
             title: 'Basic Information',
             expanded: _basicExpanded,
             anim: _basicAnim,
-            onTap: () => setState(() => _toggleSection(
+            onTap: () => setState(() => _toggleSectionAccordion(
                 _basicExpanded,
                     (v) => _basicExpanded = v,
-                _basicAnim)),
+                _basicAnim,
+                _classAnim,
+                _priceAnim)),
             child: _buildBasicBody(),
           ),
           const SizedBox(height: 14),
@@ -436,10 +457,12 @@ class _ProductScreenState extends State<ProductScreen>
             title: 'Classification',
             expanded: _classificationExpanded,
             anim: _classAnim,
-            onTap: () => setState(() => _toggleSection(
+            onTap: () => setState(() => _toggleSectionAccordion(
                 _classificationExpanded,
                     (v) => _classificationExpanded = v,
-                _classAnim)),
+                _classAnim,
+                _basicAnim,
+                _priceAnim)),
             child: _buildClassificationBody(),
           ),
           const SizedBox(height: 14),
@@ -450,10 +473,12 @@ class _ProductScreenState extends State<ProductScreen>
             title: 'Pricing & Stock',
             expanded: _pricingExpanded,
             anim: _priceAnim,
-            onTap: () => setState(() => _toggleSection(
+            onTap: () => setState(() => _toggleSectionAccordion(
                 _pricingExpanded,
                     (v) => _pricingExpanded = v,
-                _priceAnim)),
+                _priceAnim,
+                _basicAnim,
+                _classAnim)),
             child: _buildPricingBody(),
           ),
           const SizedBox(height: 16),
@@ -777,8 +802,8 @@ class _ProductScreenState extends State<ProductScreen>
       _pStockSaleType = StockSaleType.stockWise;
       _pNonTax = NonTax.no; _pTaxRate = ProductTaxRate.zero;
       _pUom = ProductUOM.none; _pCategory = ProductCategory.pesticides;
-      _basicExpanded = false; _classificationExpanded = false; _pricingExpanded = false;
-      _basicAnim.reverse(); _classAnim.reverse(); _priceAnim.reverse();
+      _basicExpanded = true; _classificationExpanded = false; _pricingExpanded = false;
+      _basicAnim.forward(); _classAnim.reverse(); _priceAnim.reverse();
       _activeTab = _Tab.viewProducts;
     });
     _showSnack('Product "${p.name}" saved successfully!', _C.primary);

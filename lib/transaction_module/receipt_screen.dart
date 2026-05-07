@@ -213,28 +213,19 @@ class _ReceiptScreenState extends State<ReceiptScreen>
                         fontSize: 12, fontWeight: FontWeight.w600),
                   ),
                 ),
-              Container(
-                margin: const EdgeInsets.only(right: 12),
-                width: 36, height: 36,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.more_vert_rounded,
-                    color: Colors.white, size: 20),
-              ),
+
             ]),
           ),
 
           // Tab toggle
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+            padding: const EdgeInsets.fromLTRB(16, 2, 16, 10),
             child: Container(
-              height: 44,
+              height: 48,
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(22),
               ),
               child: Row(children: [
                 _tab('Receipt', Icons.receipt_long_rounded, 0),
@@ -254,9 +245,10 @@ class _ReceiptScreenState extends State<ReceiptScreen>
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 220),
         curve: Curves.easeInOut,
+        height: double.infinity,
         decoration: BoxDecoration(
           color: active ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: active
               ? [BoxShadow(color: Colors.black.withOpacity(0.10),
               blurRadius: 8, offset: const Offset(0, 2))]

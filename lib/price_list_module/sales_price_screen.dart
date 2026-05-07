@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+
 // ── Color palette ─────────────────────────────────────────────────────────────
 class _C {
   static const bg        = Color(0xFFF4F6F9);
@@ -17,9 +18,8 @@ class _C {
 }
 
 // ── Field type ────────────────────────────────────────────────────────────────
-enum FieldType { text, dropdown, multiline, phone, email, number }
+enum FieldType { text, dropdown, date, number }
 
-// ── Layout type ───────────────────────────────────────────────────────────────
 enum LayoutWidth { halfWidth, fullWidth }
 
 class FormFieldDef {
@@ -39,14 +39,13 @@ class FormFieldDef {
     this.layoutWidth = LayoutWidth.halfWidth,
   });
 
-  bool get isMultiline  => type == FieldType.multiline;
-  bool get isFullWidth  => layoutWidth == LayoutWidth.fullWidth;
   bool get isDropdown   => type == FieldType.dropdown;
+  bool get isDate       => type == FieldType.date;
+  bool get isFullWidth  => layoutWidth == LayoutWidth.fullWidth;
 }
 
 // ── Fixed sizes ───────────────────────────────────────────────────────────────
 const double _kInputH   = 48.0;
-const double _kMultiH   = 90.0;
 const double _kLabelH   = 18.0;
 const double _kLabelGap =  6.0;
 const double _kRowGap   = 14.0;
@@ -60,172 +59,106 @@ class _SectionDef {
 }
 
 // ── SECTIONS ──────────────────────────────────────────────────────────────────
-// Section 1: Basic Information
-//   Code | Ledger Name (full)
-//   Display Name (full) | Short Name (full)
-//   Address (full, multiline) | Pincode | Location
-//
-// Section 2: Tax & Identity
-//   GST | PAN
-//   Aadhaar (full)
-//
-// Section 3: Account Details
-//   SL No | FL No
-//   SL No 2 | FMS
-
 const List<_SectionDef> _sections = [
   _SectionDef(
-    icon: Icons.account_balance_wallet_rounded,
-    title: 'Basic Information',
+    icon: Icons.local_offer_rounded,
+    title: 'Price Details',
     fields: [
-      // Row 1: Code (full)
+      // Row 1: Date (left) | WS Price (right)
       FormFieldDef(
-        label: 'Code',
-        hint: 'Ledger Code',
-        icon: Icons.tag_rounded,
-        type: FieldType.text,
-        layoutWidth: LayoutWidth.fullWidth,
+        label: 'Date',
+        hint: 'Select Date',
+        icon: Icons.calendar_today_rounded,
+        type: FieldType.date,
       ),
-      // Row 2: Ledger Name (full)
       FormFieldDef(
-        label: 'Ledger Name',
-        hint: 'Enter Ledger Name',
-        icon: Icons.account_balance_wallet_rounded,
-        layoutWidth: LayoutWidth.fullWidth,
-      ),
-      // Row 3: Display Name (full)
-      FormFieldDef(
-        label: 'Display Name',
-        hint: 'Enter Display Name',
-        icon: Icons.label_rounded,
-        layoutWidth: LayoutWidth.fullWidth,
-      ),
-      // Row 4: Short Name (full)
-      FormFieldDef(
-        label: 'Short Name',
-        hint: 'Enter Short Name',
-        icon: Icons.short_text_rounded,
-        layoutWidth: LayoutWidth.fullWidth,
-      ),
-      // Row 5: Address (full, multiline)
-      FormFieldDef(
-        label: 'Address',
-        hint: 'Enter Address',
-        icon: Icons.location_on_rounded,
-        type: FieldType.multiline,
-        layoutWidth: LayoutWidth.fullWidth,
-      ),
-      // Row 6: Pincode | Location
-      FormFieldDef(
-        label: 'Pincode',
-        hint: 'Pincode',
-        icon: Icons.map_rounded,
+        label: 'WS Price',
+        hint: 'Wholesale Price',
+        icon: Icons.trending_up_rounded,
         type: FieldType.number,
       ),
+      // Row 2: Product (left) | SS Price (right)
       FormFieldDef(
-        label: 'Location',
-        hint: 'Location',
-        icon: Icons.place_rounded,
+        label: 'Product',
+        hint: 'Select Product',
+        icon: Icons.shopping_bag_rounded,
+        layoutWidth: LayoutWidth.fullWidth,
       ),
-    ],
-  ),
+      FormFieldDef(
+        label: 'SS Price',
+        hint: 'Super Store Price',
+        icon: Icons.price_change_rounded,
+        type: FieldType.number,
+      ),
+      // Row 3: Price Group (left) | Dis Type (right)
+      FormFieldDef(
+        label: 'Price Group',
+        hint: 'Select Price Group',
+        icon: Icons.category_rounded,
+        type: FieldType.dropdown,
+        options: ['Standard', 'Premium', 'Budget', 'Seasonal'],
+      ),
 
-  _SectionDef(
-    icon: Icons.receipt_long_rounded,
-    title: 'Tax & Identity',
-    fields: [
-      // Row 1: GST | PAN
+      // Row 4: Sales Price (left) | Discount (right)
       FormFieldDef(
-        label: 'GST',
-        hint: 'GST Number',
-        icon: Icons.numbers_rounded,
-      ),
-      FormFieldDef(
-        label: 'PAN',
-        hint: 'PAN Number',
-        icon: Icons.badge_rounded,
-      ),
-      // Row 2: Aadhaar (full)
-      FormFieldDef(
-        label: 'Aadhaar',
-        hint: 'Aadhaar Number',
-        icon: Icons.fingerprint_rounded,
+        label: 'Sales Price',
+        hint: 'Sales Price',
+        icon: Icons.sell_rounded,
         type: FieldType.number,
-        layoutWidth: LayoutWidth.fullWidth,
       ),
-    ],
-  ),
 
-  _SectionDef(
-    icon: Icons.folder_copy_rounded,
-    title: 'Account Details',
-    fields: [
-      // Row 1: SL No | FL No
       FormFieldDef(
-        label: 'SL No',
-        hint: 'SL Number',
-        icon: Icons.format_list_numbered_rounded,
+        label: 'MRP Price',
+        hint: 'MRP Price',
+        icon: Icons.currency_rupee_rounded,
         type: FieldType.number,
-      ),
-      FormFieldDef(
-        label: 'FL No',
-        hint: 'FL Number',
-        icon: Icons.format_list_numbered_rtl_rounded,
-        type: FieldType.number,
-      ),
-      // Row 2: SL No 2 | FMS
-      FormFieldDef(
-        label: 'SL No 2',
-        hint: 'SL Number 2',
-        icon: Icons.format_list_numbered_rounded,
-        type: FieldType.number,
-      ),
-      FormFieldDef(
-        label: 'FMS',
-        hint: 'FMS',
-        icon: Icons.folder_special_rounded,
       ),
     ],
   ),
 ];
 
-// ── Data model ────────────────────────────────────────────────────────────────
-class LedgerEntry {
-  final String             id;
-  final Map<String,String> data;
-  final DateTime           createdAt;
-  LedgerEntry({required this.id, required this.data, required this.createdAt});
-
-  String get ledgerName  => data['Ledger Name']  ?? '—';
-  String get displayName => data['Display Name'] ?? '—';
-  String get shortName   => data['Short Name']   ?? '—';
-  String get code        => data['Code']         ?? '—';
-}
-
 // Gather all fields in one flat list for controller init
 List<FormFieldDef> get _allFields =>
     _sections.expand((s) => s.fields).toList();
 
-// ── Screen ────────────────────────────────────────────────────────────────────
-class LedgerMasterScreen extends StatefulWidget {
-  final VoidCallback? onBack;
-  const LedgerMasterScreen({super.key, this.onBack});
+// ── Data model ────────────────────────────────────────────────────────────────
+class SalePriceEntry {
+  final String             id;
+  final Map<String,String> data;
+  final DateTime           createdAt;
 
-  @override
-  State<LedgerMasterScreen> createState() => _LedgerMasterScreenState();
+  SalePriceEntry({
+    required this.id,
+    required this.data,
+    required this.createdAt,
+  });
+
+  String get product    => data['Product']    ?? '—';
+  String get salesPrice => data['Sales Price'] ?? '—';
+  String get wsPrice    => data['WS Price']   ?? '—';
+  String get ssPrice    => data['SS Price']   ?? '—';
+  String get mrpPrice   => data['MRP Price']  ?? '—';
+  String get date       => data['Date']       ?? '—';
 }
 
-class _LedgerMasterScreenState extends State<LedgerMasterScreen>
+// ── Screen ────────────────────────────────────────────────────────────────────
+class SalesPriceScreen extends StatefulWidget {
+  final VoidCallback? onBack;
+  const SalesPriceScreen({super.key, this.onBack});
+
+  @override
+  State<SalesPriceScreen> createState() => _SalesPriceScreenState();
+}
+
+class _SalesPriceScreenState extends State<SalesPriceScreen>
     with TickerProviderStateMixin {
 
   bool _showList = false;
-
-  // Only one section open at a time; first section open by default
   String? _openSection = _sections.first.title;
 
-  final List<LedgerEntry>                 _entries     = [];
-  final Map<String,TextEditingController> _controllers = {};
-  final Map<String,String>                _dropValues  = {};
+  final List<SalePriceEntry>                  _entries     = [];
+  final Map<String,TextEditingController>     _controllers = {};
+  final Map<String,String>                    _dropValues  = {};
 
   @override
   void initState() {
@@ -235,6 +168,8 @@ class _LedgerMasterScreenState extends State<LedgerMasterScreen>
         _controllers[f.label] = TextEditingController();
       }
     }
+    // Set today's date by default
+    _controllers['Date']?.text = _getTodayDate();
   }
 
   @override
@@ -243,13 +178,19 @@ class _LedgerMasterScreenState extends State<LedgerMasterScreen>
     super.dispose();
   }
 
+  String _getTodayDate() {
+    final now = DateTime.now();
+    return '${now.day.toString().padLeft(2, '0')}-${now.month.toString().padLeft(2, '0')}-${now.year}';
+  }
+
   String _val(FormFieldDef f) =>
       f.isDropdown
           ? (_dropValues[f.label] ?? '')
           : (_controllers[f.label]?.text ?? '');
 
   bool get _isValid =>
-      (_controllers['Ledger Name']?.text.trim() ?? '').isNotEmpty;
+      (_controllers['Product']?.text.trim() ?? '').isNotEmpty &&
+          (_controllers['Sales Price']?.text.trim() ?? '').isNotEmpty;
 
   void _toggleSection(String title) {
     HapticFeedback.lightImpact();
@@ -258,29 +199,45 @@ class _LedgerMasterScreenState extends State<LedgerMasterScreen>
     });
   }
 
+  Future<void> _selectDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2050),
+    );
+    if (picked != null) {
+      final formatted = '${picked.day.toString().padLeft(2, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.year}';
+      setState(() {
+        _controllers['Date']?.text = formatted;
+      });
+    }
+  }
+
   void _save() {
     if (!_isValid) {
-      _snack('Please fill Ledger Name', _C.gold);
+      _snack('Please fill Product and Sales Price', _C.gold);
       return;
     }
     HapticFeedback.mediumImpact();
 
     final data  = {for (final f in _allFields) f.label: _val(f)};
-    final entry = LedgerEntry(
-      id: 'LM-${DateTime.now().millisecondsSinceEpoch}',
+    final entry = SalePriceEntry(
+      id: 'SP-${DateTime.now().millisecondsSinceEpoch}',
       data: data,
       createdAt: DateTime.now(),
     );
 
     for (final c in _controllers.values) c.clear();
     _dropValues.clear();
+    _controllers['Date']?.text = _getTodayDate();
 
     setState(() {
       _entries.insert(0, entry);
       _showList    = true;
       _openSection = null;
     });
-    _snack('Ledger "${entry.ledgerName}" saved!', _C.primary);
+    _snack('Price saved for "${entry.product}"!', _C.primary);
   }
 
   void _snack(String msg, Color color) =>
@@ -334,7 +291,7 @@ class _LedgerMasterScreenState extends State<LedgerMasterScreen>
               },
             ),
             const Expanded(
-              child: Text('Ledger Master',
+              child: Text('Sales Price',
                   style: TextStyle(
                       color: Colors.white,
                       fontSize: 19,
@@ -352,9 +309,9 @@ class _LedgerMasterScreenState extends State<LedgerMasterScreen>
                 color: Colors.white.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(22)),
             child: Row(children: [
-              _tab('New Ledger', Icons.add_circle_outline_rounded,
+              _tab('New Price', Icons.add_circle_outline_rounded,
                   !_showList, () => setState(() => _showList = false)),
-              _tab('Ledger List', Icons.list_alt_rounded,
+              _tab('Price List', Icons.list_alt_rounded,
                   _showList,  () => setState(() => _showList = true)),
             ]),
           ),
@@ -429,7 +386,7 @@ class _LedgerMasterScreenState extends State<LedgerMasterScreen>
     ],
   );
 
-  // ── Accordion Section — only one open at a time ───────────────────────────
+  // ── Accordion Section ─────────────────────────────────────────────────────
   Widget _accordionSection(_SectionDef section) {
     final isExpanded = _openSection == section.title;
     final rows = _buildRows(section.fields);
@@ -450,7 +407,6 @@ class _LedgerMasterScreenState extends State<LedgerMasterScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header tap toggles this section (closes others)
           InkWell(
             onTap: () => _toggleSection(section.title),
             borderRadius: BorderRadius.circular(20),
@@ -543,21 +499,17 @@ class _LedgerMasterScreenState extends State<LedgerMasterScreen>
   // ── Render a single row ───────────────────────────────────────────────────
   Widget _renderRow(List<FormFieldDef> row) {
     if (row.length == 1 && row[0].isFullWidth) {
-      return _cell(row[0], row[0].isMultiline ? _kMultiH : _kInputH,
-          fullWidth: true);
+      return _cell(row[0], _kInputH, fullWidth: true);
     } else if (row.length == 2) {
-      final inputH =
-      (row[0].isMultiline || row[1].isMultiline) ? _kMultiH : _kInputH;
       return Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(child: _cell(row[0], inputH)),
+          Expanded(child: _cell(row[0], _kInputH)),
           const SizedBox(width: 12),
-          Expanded(child: _cell(row[1], inputH)),
+          Expanded(child: _cell(row[1], _kInputH)),
         ],
       );
     } else {
-      // Lone half-width — render left-aligned at half width
       return Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -596,18 +548,13 @@ class _LedgerMasterScreenState extends State<LedgerMasterScreen>
         ],
       );
 
-  // ── Text / multiline input ────────────────────────────────────────────────
+  // ── Text input ────────────────────────────────────────────────────────────
   Widget _input(FormFieldDef f, double inputH) => TextField(
     controller: _controllers[f.label],
-    maxLines:          f.isMultiline ? null : 1,
-    expands:           f.isMultiline,
-    textAlignVertical: f.isMultiline
-        ? TextAlignVertical.top : TextAlignVertical.center,
-    keyboardType: f.type == FieldType.phone
-        ? TextInputType.phone
-        : f.type == FieldType.email
-        ? TextInputType.emailAddress
-        : f.type == FieldType.number
+    maxLines: 1,
+    readOnly: f.isDate,
+    onTap: f.isDate ? _selectDate : null,
+    keyboardType: f.type == FieldType.number
         ? TextInputType.number
         : TextInputType.text,
     style: const TextStyle(
@@ -618,9 +565,9 @@ class _LedgerMasterScreenState extends State<LedgerMasterScreen>
       filled:    true,
       fillColor: _C.bg,
       isDense:   true,
-      contentPadding: f.isMultiline
-          ? const EdgeInsets.fromLTRB(12, 10, 12, 8)
-          : const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      suffixIcon: f.isDate ? const Icon(Icons.calendar_today_rounded,
+          color: _C.primary, size: 18) : null,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: _C.border)),
@@ -711,7 +658,7 @@ class _LedgerMasterScreenState extends State<LedgerMasterScreen>
               children: [
                 Icon(Icons.save_rounded, color: Colors.white, size: 20),
                 SizedBox(width: 10),
-                Text('SAVE LEDGER',
+                Text('SAVE PRICE',
                     style: TextStyle(
                         color: Colors.white,
                         fontSize: 15,
@@ -737,23 +684,23 @@ class _LedgerMasterScreenState extends State<LedgerMasterScreen>
               width: 90, height: 90,
               decoration: const BoxDecoration(
                   color: _C.primaryLt, shape: BoxShape.circle),
-              child: const Icon(Icons.account_balance_wallet_rounded,
+              child: const Icon(Icons.local_offer_rounded,
                   color: _C.primary, size: 44),
             ),
             const SizedBox(height: 20),
-            const Text('No Ledgers Yet',
+            const Text('No Prices Yet',
                 style: TextStyle(
                     color: _C.textDark,
                     fontSize: 18,
                     fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
-            const Text('Save a ledger to see it here',
+            const Text('Save a price to see it here',
                 style: TextStyle(color: _C.textMid, fontSize: 14)),
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: () => setState(() => _showList = false),
               icon: const Icon(Icons.add_rounded, color: Colors.white, size: 18),
-              label: const Text('Create Ledger',
+              label: const Text('Create Price',
                   style: TextStyle(
                       color: Colors.white, fontWeight: FontWeight.w700)),
               style: ElevatedButton.styleFrom(
@@ -779,7 +726,7 @@ class _LedgerMasterScreenState extends State<LedgerMasterScreen>
   }
 
   // ── Entry card ────────────────────────────────────────────────────────────
-  Widget _entryCard(LedgerEntry e, int i) => Container(
+  Widget _entryCard(SalePriceEntry e, int i) => Container(
     margin: const EdgeInsets.only(bottom: 14),
     decoration: BoxDecoration(
         color: _C.surface,
@@ -802,32 +749,39 @@ class _LedgerMasterScreenState extends State<LedgerMasterScreen>
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight)),
           child: Row(children: [
-            _badge('LM-${_entries.length - i}'),
+            _badge('SP-${_entries.length - i}'),
             const SizedBox(width: 10),
             Expanded(
-                child: Text(e.ledgerName,
+                child: Text(e.product,
                     style: const TextStyle(
                         color: Colors.white,
                         fontSize: 15,
                         fontWeight: FontWeight.w700),
                     overflow: TextOverflow.ellipsis)),
-            if (e.code.isNotEmpty && e.code != '—') _badge(e.code),
+            _badge(e.date),
           ]),
         ),
         // Card body
         Padding(
           padding: const EdgeInsets.all(14),
           child: Column(children: [
-            // Display Name | Short Name
+            // Sales Price | WS Price
             Row(children: [
-              _statBox('Display Name', e.displayName, Icons.label_rounded),
+              _statBox('Sales Price', e.salesPrice, Icons.sell_rounded),
               const SizedBox(width: 10),
-              _statBox('Short Name',   e.shortName,   Icons.short_text_rounded),
+              _statBox('WS Price', e.wsPrice, Icons.trending_up_rounded),
+            ]),
+            const SizedBox(height: 10),
+            // SS Price | MRP Price
+            Row(children: [
+              _statBox('SS Price', e.ssPrice, Icons.price_change_rounded),
+              const SizedBox(width: 10),
+              _statBox('MRP Price', e.mrpPrice, Icons.currency_rupee_rounded),
             ]),
             const SizedBox(height: 10),
             // Extra fields
-            ...['GST', 'PAN', 'Aadhaar', 'Address', 'Pincode', 'Location']
-                .where((k) => (e.data[k] ?? '').isNotEmpty)
+            ...['Price Group', 'Dis Type', 'Discount']
+                .where((k) => (e.data[k] ?? '').isNotEmpty && e.data[k] != '—')
                 .map((k) => Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Row(children: [
@@ -860,14 +814,6 @@ class _LedgerMasterScreenState extends State<LedgerMasterScreen>
                       color: _C.textLight,
                       fontSize: 11,
                       fontWeight: FontWeight.w500)),
-              const Spacer(),
-              // Account detail chips
-              ...['SL No', 'FL No', 'FMS']
-                  .where((k) => (e.data[k] ?? '').isNotEmpty)
-                  .map((k) => Padding(
-                padding: const EdgeInsets.only(left: 6),
-                child: _smallChip('$k: ${e.data[k]}'),
-              )),
             ]),
           ]),
         ),
@@ -884,18 +830,6 @@ class _LedgerMasterScreenState extends State<LedgerMasterScreen>
         style: const TextStyle(
             color: Colors.white,
             fontSize: 11,
-            fontWeight: FontWeight.w700)),
-  );
-
-  Widget _smallChip(String text) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-    decoration: BoxDecoration(
-        color: _C.primaryLt,
-        borderRadius: BorderRadius.circular(6)),
-    child: Text(text,
-        style: const TextStyle(
-            color: _C.primary,
-            fontSize: 10,
             fontWeight: FontWeight.w700)),
   );
 

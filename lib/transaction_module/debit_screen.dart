@@ -2,65 +2,47 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 // ── Data model ────────────────────────────────────────────────────────────────
-class _PaymentEntry {
+class _DebitEntry {
   final String id;
   final String date;
   final String customerName;
-  final String balance;
   final String amount;
-  final String remark;
-  final String chequeDate;
-  final String payType;
-  final String payAccount;
+  final String reference;
   final DateTime createdAt;
 
-  _PaymentEntry({
+  _DebitEntry({
     required this.id,
     required this.date,
     required this.customerName,
-    required this.balance,
     required this.amount,
-    required this.remark,
-    required this.chequeDate,
-    required this.payType,
-    required this.payAccount,
+    required this.reference,
     required this.createdAt,
   });
 }
 
 // ── Screen ────────────────────────────────────────────────────────────────────
-class PaymentScreen extends StatefulWidget {
-  const PaymentScreen({super.key});
+class DebitScreen extends StatefulWidget {
+  const DebitScreen({super.key});
 
   @override
-  State<PaymentScreen> createState() => _PaymentScreenState();
+  State<DebitScreen> createState() => _DebitScreenState();
 }
 
-class _PaymentScreenState extends State<PaymentScreen>
+class _DebitScreenState extends State<DebitScreen>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
 
-  // Tab: 0 = Payment form, 1 = View List
+  // Tab: 0 = Debit form, 1 = View List
   int _activeTab = 0;
 
-  // Saved payments
-  final List<_PaymentEntry> _payments = [];
+  // Saved debits
+  final List<_DebitEntry> _debits = [];
 
   // Controllers
   final _dateController         = TextEditingController();
   final _customerNameController = TextEditingController();
-  final _balanceController      = TextEditingController();
   final _amountController       = TextEditingController();
-  final _remarkController       = TextEditingController();
-  final _chequeDateController   = TextEditingController();
-
-  String _selectedPayType    = 'CASH';
-  String _selectedPayAccount = 'SBI Bank';
-
-  final List<String> _payTypes    = ['CASH', 'CHEQUE', 'UPI', 'NEFT', 'RTGS'];
-  final List<String> _payAccounts = [
-    'SBI Bank', 'HDFC Bank', 'ICICI Bank', 'Axis Bank', 'Canara Bank',
-  ];
+  final _referenceController    = TextEditingController();
 
   late AnimationController _saveAnim;
 
@@ -92,55 +74,44 @@ class _PaymentScreenState extends State<PaymentScreen>
 
   void _setTodayDate() {
     final now = DateTime.now();
-    final formatted =
-        '${now.day.toString().padLeft(2, '0')}-'
+    _dateController.text =
+    '${now.day.toString().padLeft(2, '0')}-'
         '${now.month.toString().padLeft(2, '0')}-'
         '${now.year}';
-    _dateController.text = formatted;
   }
 
   @override
   void dispose() {
     _dateController.dispose();
     _customerNameController.dispose();
-    _balanceController.dispose();
     _amountController.dispose();
-    _remarkController.dispose();
-    _chequeDateController.dispose();
+    _referenceController.dispose();
     _saveAnim.dispose();
     super.dispose();
   }
 
-  // ── Save payment ──────────────────────────────────────────────────────────
-  void _savePayment() {
+  // ── Save debit ────────────────────────────────────────────────────────────
+  void _saveDebit() {
     if (!_formKey.currentState!.validate()) return;
 
-    final entry = _PaymentEntry(
-      id: 'PAY-${DateTime.now().millisecondsSinceEpoch}',
+    final entry = _DebitEntry(
+      id: 'DBT-${DateTime.now().millisecondsSinceEpoch}',
       date: _dateController.text,
       customerName: _customerNameController.text.trim(),
-      balance: _balanceController.text.trim(),
       amount: _amountController.text.trim(),
-      remark: _remarkController.text.trim(),
-      chequeDate: _chequeDateController.text.trim(),
-      payType: _selectedPayType,
-      payAccount: _selectedPayAccount,
+      reference: _referenceController.text.trim(),
       createdAt: DateTime.now(),
     );
 
     // Clear form
     _customerNameController.clear();
-    _balanceController.clear();
     _amountController.clear();
-    _remarkController.clear();
-    _chequeDateController.clear();
-    _selectedPayType    = 'CASH';
-    _selectedPayAccount = 'SBI Bank';
+    _referenceController.clear();
     _setTodayDate();
 
     setState(() {
-      _payments.insert(0, entry);
-      _activeTab = 1;
+      _debits.insert(0, entry);
+      _activeTab = 1; // switch to View List
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -148,7 +119,7 @@ class _PaymentScreenState extends State<PaymentScreen>
         content: const Row(children: [
           Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
           SizedBox(width: 10),
-          Text('Payment saved successfully!',
+          Text('Debit saved successfully!',
               style: TextStyle(fontWeight: FontWeight.w600)),
         ]),
         backgroundColor: _primary,
@@ -177,7 +148,7 @@ class _PaymentScreenState extends State<PaymentScreen>
     );
   }
 
-  // ── AppBar ────────────────────────────────────────────────────────────────
+  // ── AppBar with tabs ──────────────────────────────────────────────────────
   Widget _buildAppBar(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
@@ -190,6 +161,7 @@ class _PaymentScreenState extends State<PaymentScreen>
       child: SafeArea(
         bottom: false,
         child: Column(mainAxisSize: MainAxisSize.min, children: [
+          // Title row
           SizedBox(
             height: 60,
             child: Row(children: [
@@ -199,11 +171,12 @@ class _PaymentScreenState extends State<PaymentScreen>
                 onPressed: () => Navigator.of(context).maybePop(),
               ),
               const SizedBox(width: 4),
-              const Text('Payment',
+              const Text('Debit',
                   style: TextStyle(color: Colors.white, fontSize: 20,
                       fontWeight: FontWeight.w700, letterSpacing: 0.3)),
               const Spacer(),
-              if (_payments.isNotEmpty)
+              // Debit count badge
+              if (_debits.isNotEmpty)
                 Container(
                   margin: const EdgeInsets.only(right: 8),
                   padding: const EdgeInsets.symmetric(
@@ -213,7 +186,7 @@ class _PaymentScreenState extends State<PaymentScreen>
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    '${_payments.length} saved',
+                    '${_debits.length} saved',
                     style: const TextStyle(color: Colors.white,
                         fontSize: 12, fontWeight: FontWeight.w600),
                   ),
@@ -232,7 +205,7 @@ class _PaymentScreenState extends State<PaymentScreen>
                 borderRadius: BorderRadius.circular(22),
               ),
               child: Row(children: [
-                _tab('Payment', Icons.payments_rounded, 0),
+                _tab('Debit', Icons.credit_card_rounded, 0),
                 _tab('View List', Icons.list_alt_rounded, 1),
               ]),
             ),
@@ -280,6 +253,7 @@ class _PaymentScreenState extends State<PaymentScreen>
         key: const ValueKey('form'),
         padding: const EdgeInsets.fromLTRB(16, 20, 16, 100),
         children: [
+          const SizedBox(height: 20),
           Container(
             decoration: BoxDecoration(
               color: _cardBg,
@@ -290,77 +264,36 @@ class _PaymentScreenState extends State<PaymentScreen>
               )],
             ),
             padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildDateField(
-                  label: 'Date',
-                  controller: _dateController,
-                ),
-                _divider(),
-                _buildTextField(
-                  label: 'Customer Name',
-                  hint: 'Enter customer name',
-                  controller: _customerNameController,
-                  icon: Icons.person_outline_rounded,
-                  validator: (v) => v!.isEmpty ? 'Required' : null,
-                ),
-                _divider(),
-                _buildTextField(
-                  label: 'Balance',
-                  hint: '₹ 0.00',
-                  controller: _balanceController,
-                  icon: Icons.account_balance_wallet_outlined,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))
-                  ],
-                  readOnly: true,
-                ),
-                _divider(),
-                _buildTextField(
-                  label: 'Amount',
-                  hint: '₹ 0.00',
-                  controller: _amountController,
-                  icon: Icons.currency_rupee_rounded,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))
-                  ],
-                  validator: (v) => v!.isEmpty ? 'Required' : null,
-                ),
-                _divider(),
-                _buildTextField(
-                  label: 'Remark',
-                  hint: 'Enter remark',
-                  controller: _remarkController,
-                  icon: Icons.comment_outlined,
-                ),
-                _divider(),
-                _buildDateField(
-                  label: 'Cheque Date',
-                  controller: _chequeDateController,
-                  hint: 'DD-MM-YYYY',
-                  optional: true,
-                ),
-                _divider(),
-                _buildDropdown(
-                  label: 'Pay Type',
-                  icon: Icons.payment_rounded,
-                  value: _selectedPayType,
-                  items: _payTypes,
-                  onChanged: (v) => setState(() => _selectedPayType = v!),
-                ),
-                _divider(),
-                _buildDropdown(
-                  label: 'Pay Account',
-                  icon: Icons.account_balance_rounded,
-                  value: _selectedPayAccount,
-                  items: _payAccounts,
-                  onChanged: (v) => setState(() => _selectedPayAccount = v!),
-                ),
-              ],
-            ),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              _buildDateField(),
+              _divider(),
+              _buildTextField(
+                label: 'Customer Name',
+                hint: 'Enter customer name',
+                controller: _customerNameController,
+                icon: Icons.person_outline_rounded,
+                validator: (v) => v!.isEmpty ? 'Required' : null,
+              ),
+              _divider(),
+              _buildTextField(
+                label: 'Amount',
+                hint: '₹ 0.00',
+                controller: _amountController,
+                icon: Icons.currency_rupee_rounded,
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))
+                ],
+                validator: (v) => v!.isEmpty ? 'Required' : null,
+              ),
+              _divider(),
+              _buildTextField(
+                label: 'Reference',
+                hint: 'Cheque no. / UTR / Ref. no.',
+                controller: _referenceController,
+                icon: Icons.tag_rounded,
+              ),
+            ]),
           ),
         ],
       ),
@@ -369,7 +302,7 @@ class _PaymentScreenState extends State<PaymentScreen>
 
   // ── View List ─────────────────────────────────────────────────────────────
   Widget _buildList() {
-    if (_payments.isEmpty) {
+    if (_debits.isEmpty) {
       return Center(
         key: const ValueKey('empty'),
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -378,21 +311,21 @@ class _PaymentScreenState extends State<PaymentScreen>
             decoration: const BoxDecoration(
               color: Color(0xFFE8F5ED), shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.payments_rounded,
+            child: const Icon(Icons.credit_card_rounded,
                 color: _primary, size: 44),
           ),
           const SizedBox(height: 20),
-          const Text('No Payments Yet',
+          const Text('No Debits Yet',
               style: TextStyle(color: _labelColor, fontSize: 18,
                   fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
-          const Text('Save a payment to see it here',
+          const Text('Save a debit to see it here',
               style: TextStyle(color: _textMid, fontSize: 14)),
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: () => setState(() => _activeTab = 0),
             icon: const Icon(Icons.add_rounded, color: Colors.white, size: 18),
-            label: const Text('New Payment',
+            label: const Text('New Debit',
                 style: TextStyle(color: Colors.white,
                     fontWeight: FontWeight.w700)),
             style: ElevatedButton.styleFrom(
@@ -411,12 +344,12 @@ class _PaymentScreenState extends State<PaymentScreen>
       key: const ValueKey('list'),
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
       physics: const BouncingScrollPhysics(),
-      itemCount: _payments.length,
-      itemBuilder: (_, i) => _paymentCard(_payments[i], i),
+      itemCount: _debits.length,
+      itemBuilder: (_, i) => _debitCard(_debits[i], i),
     );
   }
 
-  Widget _paymentCard(_PaymentEntry e, int i) {
+  Widget _debitCard(_DebitEntry e, int i) {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
@@ -441,13 +374,12 @@ class _PaymentScreenState extends State<PaymentScreen>
               ),
             ),
             child: Row(children: [
-              _badge('PAY-${_payments.length - i}'),
+              _badge('DBT-${_debits.length - i}'),
               const SizedBox(width: 10),
               Expanded(child: Text(e.customerName,
                   style: const TextStyle(color: Colors.white, fontSize: 15,
                       fontWeight: FontWeight.w700),
                   overflow: TextOverflow.ellipsis)),
-              _badge(e.payType),
             ]),
           ),
 
@@ -455,25 +387,23 @@ class _PaymentScreenState extends State<PaymentScreen>
           Padding(
             padding: const EdgeInsets.all(14),
             child: Column(children: [
+              // Amount / Date stat row
               Row(children: [
                 _statBox('Amount',
                     e.amount.isEmpty ? '—' : '₹${e.amount}',
                     Icons.currency_rupee_rounded),
                 const SizedBox(width: 10),
                 _statBox('Date', e.date, Icons.calendar_today_rounded),
-                const SizedBox(width: 10),
-                _statBox('Account', e.payAccount,
-                    Icons.account_balance_rounded),
               ]),
-              if (e.balance.isNotEmpty)
-                _detailRow('Balance', '₹${e.balance}'),
-              if (e.chequeDate.isNotEmpty)
-                _detailRow('Cheque Date', e.chequeDate),
-              if (e.remark.isNotEmpty)
-                _detailRow('Remark', e.remark),
+
+              // Detail rows
+              if (e.reference.isNotEmpty)
+                _detailRow('Reference', e.reference),
+
               const SizedBox(height: 10),
               const Divider(height: 1, color: Color(0xFFE2E8F0)),
               const SizedBox(height: 10),
+
               Row(children: [
                 const Icon(Icons.access_time_rounded,
                     color: _textLight, size: 12),
@@ -489,8 +419,8 @@ class _PaymentScreenState extends State<PaymentScreen>
                     color: const Color(0xFFE8F5ED),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Text(e.payType,
-                      style: const TextStyle(color: _primary,
+                  child: const Text('DEBIT',
+                      style: TextStyle(color: _primary,
                           fontSize: 11, fontWeight: FontWeight.w700)),
                 ),
               ]),
@@ -501,7 +431,6 @@ class _PaymentScreenState extends State<PaymentScreen>
     );
   }
 
-  // ── Shared helpers ────────────────────────────────────────────────────────
   Widget _detailRow(String k, String v) => Padding(
     padding: const EdgeInsets.only(top: 8),
     child: Row(children: [
@@ -556,36 +485,18 @@ class _PaymentScreenState extends State<PaymentScreen>
     return '${d.day} ${m[d.month]} ${d.year}';
   }
 
-  // ── Date field (reusable for Date + Cheque Date) ───────────────────────────
-  Widget _buildDateField({
-    required String label,
-    required TextEditingController controller,
-    String hint = 'DD-MM-YYYY',
-    bool optional = false,
-  }) {
+  // ── Date field ────────────────────────────────────────────────────────────
+  Widget _buildDateField() {
     return _fieldWrapper(
-      label: label,
+      label: 'Select Date',
       icon: Icons.calendar_today_rounded,
       child: GestureDetector(
         onTap: () async {
-          final now = DateTime.now();
-          // Parse existing value if any, else use today
-          DateTime initial = now;
-          if (controller.text.isNotEmpty) {
-            final parts = controller.text.split('-');
-            if (parts.length == 3) {
-              initial = DateTime(
-                int.tryParse(parts[2]) ?? now.year,
-                int.tryParse(parts[1]) ?? now.month,
-                int.tryParse(parts[0]) ?? now.day,
-              );
-            }
-          }
           final picked = await showDatePicker(
             context: context,
-            initialDate: initial,
+            initialDate: DateTime.now(),
             firstDate: DateTime(2020),
-            lastDate: DateTime(2035),
+            lastDate: DateTime(2030),
             builder: (context, child) => Theme(
               data: Theme.of(context).copyWith(
                 colorScheme: const ColorScheme.light(
@@ -599,7 +510,7 @@ class _PaymentScreenState extends State<PaymentScreen>
           );
           if (picked != null) {
             setState(() {
-              controller.text =
+              _dateController.text =
               '${picked.day.toString().padLeft(2, '0')}-'
                   '${picked.month.toString().padLeft(2, '0')}-'
                   '${picked.year}';
@@ -608,13 +519,10 @@ class _PaymentScreenState extends State<PaymentScreen>
         },
         child: AbsorbPointer(
           child: TextFormField(
-            controller: controller,
+            controller: _dateController,
             style: const TextStyle(fontSize: 15,
                 fontWeight: FontWeight.w600, color: _labelColor),
-            validator: optional
-                ? null
-                : (v) => (v == null || v.isEmpty) ? 'Required' : null,
-            decoration: _inputDecoration(hint: hint).copyWith(
+            decoration: _inputDecoration(hint: 'DD-MM-YYYY').copyWith(
               suffixIcon: const Icon(Icons.arrow_drop_down_rounded,
                   color: _primary, size: 26),
             ),
@@ -649,40 +557,6 @@ class _PaymentScreenState extends State<PaymentScreen>
         decoration: _inputDecoration(hint: hint).copyWith(
           fillColor: readOnly ? const Color(0xFFF0F7F2) : _inputBg,
         ),
-      ),
-    );
-  }
-
-  // ── Dropdown field ────────────────────────────────────────────────────────
-  Widget _buildDropdown({
-    required String label,
-    required IconData icon,
-    required String value,
-    required List<String> items,
-    required ValueChanged<String?> onChanged,
-  }) {
-    return _fieldWrapper(
-      label: label,
-      icon: icon,
-      child: DropdownButtonFormField<String>(
-        value: value,
-        onChanged: onChanged,
-        style: const TextStyle(fontSize: 15,
-            fontWeight: FontWeight.w500, color: _labelColor),
-        icon: const Icon(Icons.arrow_drop_down_rounded,
-            color: _primary, size: 26),
-        decoration: _inputDecoration(hint: '').copyWith(
-          contentPadding: const EdgeInsets.symmetric(
-              horizontal: 14, vertical: 12),
-        ),
-        dropdownColor: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        items: items.map((e) => DropdownMenuItem(
-          value: e,
-          child: Text(e, style: const TextStyle(
-              fontSize: 14, color: _labelColor,
-              fontWeight: FontWeight.w500)),
-        )).toList(),
       ),
     );
   }
@@ -724,8 +598,7 @@ class _PaymentScreenState extends State<PaymentScreen>
           fontWeight: FontWeight.w400),
       filled: true,
       fillColor: _inputBg,
-      contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16, vertical: 15),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
         borderSide: const BorderSide(color: _borderColor, width: 1.2),
@@ -759,7 +632,6 @@ class _PaymentScreenState extends State<PaymentScreen>
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       decoration: BoxDecoration(
-        color: _bgPage,
         boxShadow: [BoxShadow(
           color: Colors.black.withOpacity(0.06),
           blurRadius: 12, offset: const Offset(0, -4),
@@ -769,7 +641,7 @@ class _PaymentScreenState extends State<PaymentScreen>
         onTapDown: (_) => _saveAnim.reverse(),
         onTapUp: (_) {
           _saveAnim.forward();
-          _savePayment();
+          _saveDebit();
         },
         onTapCancel: () => _saveAnim.forward(),
         child: ScaleTransition(

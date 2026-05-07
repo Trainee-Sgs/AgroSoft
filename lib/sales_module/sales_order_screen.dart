@@ -151,13 +151,11 @@ class AgroProducts {
     'VERMICOMPOST 50 KGS',
   ];
 
-  // ── Sample product info map (oldPrice + currentStock) ──────────────────────
-  // Replace these with real data from your DB / API as needed.
   static final Map<String, ProductInfo> _info = {
     for (int i = 0; i < all.length; i++)
       all[i]: ProductInfo(
-        oldPrice:     50.0 + (i % 20) * 12.5,   // placeholder prices
-        currentStock: 10   + (i % 50),           // placeholder stock
+        oldPrice:     50.0 + (i % 20) * 12.5,
+        currentStock: 10   + (i % 50),
       ),
   };
 
@@ -171,10 +169,8 @@ class AgroProducts {
   }
 }
 
-// ── Tax Type ──────────────────────────────────────────────────────────────────
 enum TaxType { inclusive, exclusive }
 
-// ── Data model ────────────────────────────────────────────────────────────────
 class OrderItem {
   String  product;
   double  price;
@@ -202,7 +198,6 @@ class OrderItem {
   double get subtotal   => price * quantity;
 }
 
-// ── Saved Order model ─────────────────────────────────────────────────────────
 class SavedOrder {
   final String   id;
   final String   customer;
@@ -225,6 +220,10 @@ class SavedOrder {
   double get grandTotal => subtotal + taxTotal - discount;
 }
 
+// ── Accordion section keys ────────────────────────────────────────────────────
+const _kOrderDetails = 'OrderDetails';
+const _kOrderItems   = 'OrderItems';
+
 // ── Main Screen ───────────────────────────────────────────────────────────────
 class SalesOrderScreen extends StatefulWidget {
   final VoidCallback? onBack;
@@ -237,8 +236,10 @@ class SalesOrderScreen extends StatefulWidget {
 class _SalesOrderScreenState extends State<SalesOrderScreen>
     with TickerProviderStateMixin {
 
-  bool _showViewOrders       = false;
-  bool _orderDetailsExpanded = false;
+  bool _showViewOrders = false;
+
+  // ── Accordion: which section is open ──────────────────────────────────
+  String? _openSection = _kOrderDetails;
 
   final _customerCtrl  = TextEditingController();
   final _referenceCtrl = TextEditingController();
@@ -250,40 +251,18 @@ class _SalesOrderScreenState extends State<SalesOrderScreen>
 
   final List<SavedOrder> _savedOrders = [];
 
-  late AnimationController _toggleAnim;
-  late AnimationController _detailsArrowAnim;
-
-  @override
-  void initState() {
-    super.initState();
-    _toggleAnim = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
-    _detailsArrowAnim = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 250),
-      value: 1.0,
-    );
-  }
-
   @override
   void dispose() {
     _customerCtrl.dispose();
     _referenceCtrl.dispose();
     _discountCtrl.dispose();
-    _toggleAnim.dispose();
-    _detailsArrowAnim.dispose();
     super.dispose();
   }
 
-  void _toggleOrderDetails() {
-    setState(() => _orderDetailsExpanded = !_orderDetailsExpanded);
-    if (_orderDetailsExpanded) {
-      _detailsArrowAnim.reverse();
-    } else {
-      _detailsArrowAnim.forward();
-    }
+  // ── Toggle accordion section ───────────────────────────────────────────
+  void _toggleSection(String key) {
+    HapticFeedback.lightImpact();
+    setState(() => _openSection = _openSection == key ? null : key);
   }
 
   double get _subTotal   => _items.fold(0, (s, i) => s + i.subtotal);
@@ -318,7 +297,6 @@ class _SalesOrderScreenState extends State<SalesOrderScreen>
     if (picked != null) setState(() => _selectedDate = picked);
   }
 
-  // ── Delete item with confirmation ─────────────────────────────────────────
   void _deleteItem(int index) {
     final productName = _items[index].product;
     showDialog(
@@ -330,22 +308,16 @@ class _SalesOrderScreenState extends State<SalesOrderScreen>
             Icon(Icons.delete_rounded, color: _C.red, size: 22),
             SizedBox(width: 8),
             Text('Delete Item',
-                style: TextStyle(
-                    color: _C.textDark,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700)),
+                style: TextStyle(color: _C.textDark, fontSize: 17, fontWeight: FontWeight.w700)),
           ],
         ),
-        content: Text(
-          'Remove "$productName" from this order?',
-          style: const TextStyle(color: _C.textMid, fontSize: 14),
-        ),
+        content: Text('Remove "$productName" from this order?',
+            style: const TextStyle(color: _C.textMid, fontSize: 14)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Cancel',
-                style: TextStyle(
-                    color: _C.textMid, fontWeight: FontWeight.w600)),
+                style: TextStyle(color: _C.textMid, fontWeight: FontWeight.w600)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -354,32 +326,26 @@ class _SalesOrderScreenState extends State<SalesOrderScreen>
                 _items.removeAt(index);
                 if (_selectedIndex == index) {
                   _selectedIndex = null;
-                } else if (_selectedIndex != null &&
-                    _selectedIndex! > index) {
+                } else if (_selectedIndex != null && _selectedIndex! > index) {
                   _selectedIndex = _selectedIndex! - 1;
                 }
               });
               _showSnack('Item removed', _C.red);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: _C.red,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+              backgroundColor: _C.red, elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             child: const Text('Delete',
-                style: TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.w700)),
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
           ),
         ],
       ),
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Add / Edit Item Dialog
-  // ─────────────────────────────────────────────────────────────────────────
-  void _showItemDialog({OrderItem? existing, int? editIndex}) {
+  // ── Add / Edit Item — Bottom Sheet ────────────────────────────────────────
+  void _showItemSheet({OrderItem? existing, int? editIndex}) {
     final productCtrl = TextEditingController(text: existing?.product ?? '');
     final priceCtrl   = TextEditingController(
         text: existing != null ? existing.price.toStringAsFixed(2) : '');
@@ -390,11 +356,9 @@ class _SalesOrderScreenState extends State<SalesOrderScreen>
 
     const TaxType fixedTaxType = TaxType.exclusive;
 
-    double       previewTotal   = existing?.grandTotal ?? 0;
+    double       previewTotal  = existing?.grandTotal ?? 0;
     double?      oldPrice;
-    List<String> suggestions    = [];
-
-    // ── selectedProduct: shown after a product name is confirmed ─────────────
+    List<String> suggestions   = [];
     ProductInfo? selectedProduct =
     existing != null ? AgroProducts.getInfo(existing.product) : null;
 
@@ -404,9 +368,9 @@ class _SalesOrderScreenState extends State<SalesOrderScreen>
     }
 
     void recalc(StateSetter ss) {
-      final p = double.tryParse(priceCtrl.text) ?? 0;
-      final q = int.tryParse(qtyCtrl.text) ?? 0;
-      final t = double.tryParse(taxCtrl.text) ?? 0;
+      final p     = double.tryParse(priceCtrl.text) ?? 0;
+      final q     = int.tryParse(qtyCtrl.text) ?? 0;
+      final t     = double.tryParse(taxCtrl.text) ?? 0;
       final total = p * q + p * q * t / 100;
       ss(() => previewTotal = total);
     }
@@ -416,590 +380,535 @@ class _SalesOrderScreenState extends State<SalesOrderScreen>
       oldPrice = idx != null ? _items[idx].price : null;
     }
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      barrierColor: Colors.black54,
-      builder: (_) => StatefulBuilder(builder: (ctx, ss) {
-        return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-          child: SingleChildScrollView(
-            child: Container(
-              decoration: BoxDecoration(
-                color: _C.surface,
-                borderRadius: BorderRadius.circular(28),
-                boxShadow: [
-                  BoxShadow(
-                    color: _C.primary.withOpacity(0.15),
-                    blurRadius: 40,
-                    offset: const Offset(0, 16),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // ── Dialog header ────────────────────────────────────────
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [_C.primary, _C.primaryDk],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.only(
-                        topLeft:  Radius.circular(28),
-                        topRight: Radius.circular(28),
-                      ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => StatefulBuilder(
+        builder: (ctx, ss) => DraggableScrollableSheet(
+          initialChildSize: 0.75,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (_, scrollCtrl) => Container(
+            decoration: const BoxDecoration(
+              color: _C.surface,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            ),
+            child: Column(
+              children: [
+                // ── Sheet header ─────────────────────────────────────────
+                Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [_C.primary, _C.primaryDk],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.shopping_bag_rounded,
-                            color: Colors.white, size: 22),
-                        const SizedBox(width: 10),
-                        Text(
-                          editIndex != null ? 'Edit Item' : 'Add Item',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 17,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
                   ),
-
-                  // ── Dialog body ──────────────────────────────────────────
-                  Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-
-                        // ── Product search ───────────────────────────────
-                        const Text('Product Name',
-                            style: TextStyle(
-                                color: _C.textMid,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600)),
-                        const SizedBox(height: 4),
-                        TextField(
-                          controller: productCtrl,
-                          textCapitalization: TextCapitalization.characters,
-                          style: const TextStyle(
-                              color: _C.textDark,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500),
-                          onChanged: (val) {
-                            ss(() {
-                              suggestions      = AgroProducts.search(val);
-                              // Clear product info card while user is still typing
-                              selectedProduct  = null;
-                            });
-                            checkOldPrice(ss, val);
-                            recalc(ss);
-                          },
-                          decoration: InputDecoration(
-                            suffixIcon: productCtrl.text.isNotEmpty
-                                ? IconButton(
-                              icon: const Icon(Icons.clear,
-                                  color: _C.textLight, size: 18),
-                              onPressed: () {
-                                productCtrl.clear();
-                                ss(() {
-                                  suggestions     = [];
-                                  oldPrice        = null;
-                                  selectedProduct = null;
-                                });
-                              },
-                            )
-                                : null,
-                            hintText: 'Type to search product…',
-                            hintStyle: const TextStyle(
-                                color: _C.textLight, fontSize: 12),
-                            filled: true,
-                            fillColor: _C.bg,
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 12),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: _C.border),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: _C.border),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                  color: _C.primary, width: 1.5),
-                            ),
-                          ),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 10),
+                      Container(
+                        width: 40, height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.4),
+                          borderRadius: BorderRadius.circular(2),
                         ),
-
-                        // ── Suggestions dropdown ─────────────────────────
-                        if (suggestions.isNotEmpty) ...[
-                          const SizedBox(height: 4),
-                          Container(
-                            constraints:
-                            const BoxConstraints(maxHeight: 200),
-                            decoration: BoxDecoration(
-                              color: _C.surface,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                  color: _C.primary.withOpacity(0.25)),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: _C.primary.withOpacity(0.08),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(14),
-                              child: ListView.separated(
-                                shrinkWrap: true,
-                                padding: EdgeInsets.zero,
-                                itemCount: suggestions.length,
-                                separatorBuilder: (_, __) =>
-                                const Divider(height: 1, color: _C.border),
-                                itemBuilder: (_, i) {
-                                  final s     = suggestions[i];
-                                  final query =
-                                  productCtrl.text.toUpperCase().trim();
-                                  final idx   = s.indexOf(query);
-                                  final existIdx = _existingIndexFor(s,
-                                      skipIndex: editIndex);
-                                  return InkWell(
-                                    onTap: () {
-                                      productCtrl.text = s;
-                                      productCtrl.selection =
-                                          TextSelection.fromPosition(
-                                              TextPosition(offset: s.length));
-                                      checkOldPrice(ss, s);
-                                      // ── Load product info on tap ─────────
-                                      ss(() {
-                                        suggestions     = [];
-                                        selectedProduct = AgroProducts.getInfo(s);
-                                      });
-                                      recalc(ss);
-                                    },
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 14, vertical: 11),
-                                      child: Row(
-                                        children: [
-                                          const Icon(Icons.eco_rounded,
-                                              color: _C.primary, size: 14),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: idx >= 0 && query.isNotEmpty
-                                                ? RichText(
-                                              text: TextSpan(children: [
-                                                TextSpan(
-                                                  text: s.substring(0, idx),
-                                                  style: const TextStyle(
-                                                      color: _C.textMid,
-                                                      fontSize: 13,
-                                                      fontWeight:
-                                                      FontWeight.w500),
-                                                ),
-                                                TextSpan(
-                                                  text: s.substring(idx,
-                                                      idx + query.length),
-                                                  style: const TextStyle(
-                                                      color: _C.primary,
-                                                      fontSize: 13,
-                                                      fontWeight:
-                                                      FontWeight.w800,
-                                                      backgroundColor:
-                                                      Color(0xFFE8F5ED)),
-                                                ),
-                                                TextSpan(
-                                                  text: s.substring(
-                                                      idx + query.length),
-                                                  style: const TextStyle(
-                                                      color: _C.textMid,
-                                                      fontSize: 13,
-                                                      fontWeight:
-                                                      FontWeight.w500),
-                                                ),
-                                              ]),
-                                            )
-                                                : Text(s,
-                                                style: const TextStyle(
-                                                    color: _C.textDark,
-                                                    fontSize: 13,
-                                                    fontWeight:
-                                                    FontWeight.w500)),
-                                          ),
-                                          if (existIdx != null) ...[
-                                            const SizedBox(width: 6),
-                                            Container(
-                                              padding:
-                                              const EdgeInsets.symmetric(
-                                                  horizontal: 6,
-                                                  vertical: 2),
-                                              decoration: BoxDecoration(
-                                                color: _C.primaryLt,
-                                                borderRadius:
-                                                BorderRadius.circular(6),
-                                              ),
-                                              child: Text(
-                                                '×${_items[existIdx].quantity}',
-                                                style: const TextStyle(
-                                                    color: _C.primary,
-                                                    fontSize: 10,
-                                                    fontWeight:
-                                                    FontWeight.w700),
-                                              ),
-                                            ),
-                                          ],
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                        ],
-
-                        // ── Old-price hint ───────────────────────────────
-                        if (oldPrice != null) ...[
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 7),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFFF8EC),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                  color: _C.gold.withOpacity(0.4)),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.history_rounded,
-                                    size: 14, color: _C.gold),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: RichText(
-                                    text: TextSpan(
-                                      style: const TextStyle(
-                                          fontSize: 12,
-                                          color: _C.gold,
-                                          fontWeight: FontWeight.w500),
-                                      children: [
-                                        const TextSpan(
-                                            text: 'Already in order — '),
-                                        const TextSpan(
-                                            text: 'Previous price: '),
-                                        TextSpan(
-                                          text:
-                                          '₹${oldPrice!.toStringAsFixed(2)}',
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight.w800),
-                                        ),
-                                        const TextSpan(
-                                            text:
-                                            '. Qty will be added to existing row.'),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-
-                        // ── Product Info Card (Old Price + Stock) ────────
-                        if (selectedProduct != null) ...[
-                          const SizedBox(height: 12),
-                          Container(
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFEFF8F3),
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                  color: _C.primary.withOpacity(0.25)),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: _C.primary.withOpacity(0.15),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: const Icon(
-                                      Icons.inventory_rounded,
-                                      color: _C.primary,
-                                      size: 18),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                    CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Old Price: ₹${selectedProduct!.oldPrice.toStringAsFixed(2)}',
-                                        style: const TextStyle(
-                                            color: _C.textMid,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w500),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Row(
-                                        children: [
-                                          Text(
-                                            'Current Stock: ${selectedProduct!.currentStock} units',
-                                            style: const TextStyle(
-                                                color: _C.primary,
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w700),
-                                          ),
-                                          const SizedBox(width: 6),
-                                          // Low stock warning badge
-                                          if (selectedProduct!.currentStock < 20)
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(
-                                                  horizontal: 6, vertical: 2),
-                                              decoration: BoxDecoration(
-                                                color: selectedProduct!
-                                                    .currentStock ==
-                                                    0
-                                                    ? const Color(0xFFFEF2F2)
-                                                    : const Color(0xFFFFF8EC),
-                                                borderRadius:
-                                                BorderRadius.circular(6),
-                                                border: Border.all(
-                                                  color: selectedProduct!
-                                                      .currentStock ==
-                                                      0
-                                                      ? _C.red
-                                                      .withOpacity(0.4)
-                                                      : _C.gold
-                                                      .withOpacity(0.4),
-                                                ),
-                                              ),
-                                              child: Text(
-                                                selectedProduct!
-                                                    .currentStock ==
-                                                    0
-                                                    ? 'Out of stock'
-                                                    : 'Low stock',
-                                                style: TextStyle(
-                                                  color: selectedProduct!
-                                                      .currentStock ==
-                                                      0
-                                                      ? _C.red
-                                                      : _C.gold,
-                                                  fontSize: 10,
-                                                  fontWeight:
-                                                  FontWeight.w700,
-                                                ),
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-
-                        const SizedBox(height: 14),
-
-                        // ── Price + Quantity ─────────────────────────────
-                        Row(
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+                        child: Row(
                           children: [
-                            Expanded(
-                              child: _DialogField(
-                                label: 'Price (₹)',
-                                controller: priceCtrl,
-                                keyboardType: TextInputType.number,
-                                onChanged: (_) => recalc(ss),
-                              ),
+                            const Icon(Icons.shopping_bag_rounded,
+                                color: Colors.white, size: 22),
+                            const SizedBox(width: 10),
+                            Text(
+                              editIndex != null ? 'Edit Item' : 'Add Item',
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w700),
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _DialogField(
-                                label: 'Quantity',
-                                controller: qtyCtrl,
-                                keyboardType: TextInputType.number,
-                                onChanged: (_) => recalc(ss),
+                            const Spacer(),
+                            GestureDetector(
+                              onTap: () => Navigator.pop(ctx),
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(Icons.close_rounded,
+                                    color: Colors.white, size: 18),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 14),
+                      ),
+                    ],
+                  ),
+                ),
 
-                        // ── Tax % ────────────────────────────────────────
-                        _DialogField(
-                          label: 'Tax (%)',
-                          controller: taxCtrl,
-                          keyboardType: TextInputType.number,
-                          onChanged: (_) => recalc(ss),
+                // ── Scrollable body ──────────────────────────────────────
+                Expanded(
+                  child: ListView(
+                    controller: scrollCtrl,
+                    padding: const EdgeInsets.all(20),
+                    children: [
+                      // Product search
+                      const Text('Product Name',
+                          style: TextStyle(
+                              color: _C.textMid, fontSize: 12, fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: productCtrl,
+                        textCapitalization: TextCapitalization.characters,
+                        style: const TextStyle(
+                            color: _C.textDark, fontSize: 14, fontWeight: FontWeight.w500),
+                        onChanged: (val) {
+                          ss(() {
+                            suggestions     = AgroProducts.search(val);
+                            selectedProduct = null;
+                          });
+                          checkOldPrice(ss, val);
+                          recalc(ss);
+                        },
+                        decoration: InputDecoration(
+                          suffixIcon: productCtrl.text.isNotEmpty
+                              ? IconButton(
+                            icon: const Icon(Icons.clear,
+                                color: _C.textLight, size: 18),
+                            onPressed: () {
+                              productCtrl.clear();
+                              ss(() {
+                                suggestions     = [];
+                                oldPrice        = null;
+                                selectedProduct = null;
+                              });
+                            },
+                          )
+                              : null,
+                          hintText: 'Type to search product…',
+                          hintStyle:
+                          const TextStyle(color: _C.textLight, fontSize: 12),
+                          filled: true, fillColor: _C.bg,
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 12),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: _C.border)),
+                          enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: _C.border)),
+                          focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide:
+                              const BorderSide(color: _C.primary, width: 1.5)),
                         ),
+                      ),
 
-                        const SizedBox(height: 14),
-
-                        // ── Item total preview ───────────────────────────
+                      // Suggestions
+                      if (suggestions.isNotEmpty) ...[
+                        const SizedBox(height: 4),
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 12),
+                          constraints: const BoxConstraints(maxHeight: 200),
                           decoration: BoxDecoration(
                             color: _C.primaryLt,
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                                color: _C.primary.withOpacity(0.2)),
+                            border: Border.all(color: _C.primary.withOpacity(0.25)),
+                            boxShadow: [
+                              BoxShadow(
+                                  color: _C.primary.withOpacity(0.08),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 4)),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(14),
+                            child: ListView.separated(
+                              shrinkWrap: true,
+                              padding: EdgeInsets.zero,
+                              itemCount: suggestions.length,
+                              separatorBuilder: (_, __) =>
+                              const Divider(height: 1, color: _C.border),
+                              itemBuilder: (_, i) {
+                                final s        = suggestions[i];
+                                final query    = productCtrl.text.toUpperCase().trim();
+                                final idx      = s.indexOf(query);
+                                final existIdx = _existingIndexFor(s, skipIndex: editIndex);
+                                return InkWell(
+                                  onTap: () {
+                                    productCtrl.text = s;
+                                    productCtrl.selection = TextSelection.fromPosition(
+                                        TextPosition(offset: s.length));
+                                    checkOldPrice(ss, s);
+                                    ss(() {
+                                      suggestions     = [];
+                                      selectedProduct = AgroProducts.getInfo(s);
+                                    });
+                                    recalc(ss);
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 14, vertical: 11),
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.eco_rounded,
+                                            color: _C.primary, size: 14),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: idx >= 0 && query.isNotEmpty
+                                              ? RichText(
+                                            text: TextSpan(children: [
+                                              TextSpan(
+                                                  text: s.substring(0, idx),
+                                                  style: const TextStyle(
+                                                      color: _C.primaryDk,
+                                                      fontSize: 13,
+                                                      fontWeight: FontWeight.w500)),
+                                              TextSpan(
+                                                  text: s.substring(
+                                                      idx, idx + query.length),
+                                                  style: const TextStyle(
+                                                      color: _C.primary,
+                                                      fontSize: 13,
+                                                      fontWeight: FontWeight.w800,
+                                                      backgroundColor:
+                                                      Color(0xFFBEEDD1))),
+                                              TextSpan(
+                                                  text: s.substring(
+                                                      idx + query.length),
+                                                  style: const TextStyle(
+                                                      color: _C.primaryDk,
+                                                      fontSize: 13,
+                                                      fontWeight: FontWeight.w500)),
+                                            ]),
+                                          )
+                                              : Text(s,
+                                              style: const TextStyle(
+                                                  color:_C.primaryDk,
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w500)),
+                                        ),
+                                        if (existIdx != null) ...[
+                                          const SizedBox(width: 6),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 6, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: _C.primaryLt,
+                                              borderRadius: BorderRadius.circular(6),
+                                            ),
+                                            child: Text('×${_items[existIdx].quantity}',
+                                                style: const TextStyle(
+                                                    color: _C.primary,
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.w700)),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+
+                      // Old price hint
+                      if (oldPrice != null) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 7),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF8EC),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: _C.gold.withOpacity(0.4)),
                           ),
                           child: Row(
-                            mainAxisAlignment:
-                            MainAxisAlignment.spaceBetween,
                             children: [
-                              const Flexible(
-                                child: Text('Item Total',
-                                    style: TextStyle(
-                                        color: _C.primary,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 14)),
-                              ),
-                              const SizedBox(width: 8),
-                              Flexible(
-                                child: Text(
-                                  '₹${previewTotal.toStringAsFixed(2)}',
-                                  style: const TextStyle(
-                                      color: _C.primary,
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 18),
-                                  overflow: TextOverflow.ellipsis,
+                              const Icon(Icons.history_rounded,
+                                  size: 14, color: _C.gold),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: RichText(
+                                  text: TextSpan(
+                                    style: const TextStyle(
+                                        fontSize: 12,
+                                        color: _C.gold,
+                                        fontWeight: FontWeight.w500),
+                                    children: [
+                                      const TextSpan(text: 'Already in order — Previous price: '),
+                                      TextSpan(
+                                          text: '₹${oldPrice!.toStringAsFixed(2)}',
+                                          style: const TextStyle(fontWeight: FontWeight.w800)),
+                                      const TextSpan(
+                                          text: '. Qty will be added to existing row.'),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ],
                           ),
                         ),
                       ],
-                    ),
-                  ),
 
-                  // ── Cancel / Add buttons ─────────────────────────────────
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => Navigator.pop(ctx),
-                            style: OutlinedButton.styleFrom(
-                              padding:
-                              const EdgeInsets.symmetric(vertical: 14),
-                              side: const BorderSide(color: _C.border),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14)),
+                      const SizedBox(height: 14),
+
+                      // Price + Qty with inline Old Price & Stock badges
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    const Text('Price (₹)',
+                                        style: TextStyle(color: _C.textMid,
+                                            fontSize: 12, fontWeight: FontWeight.w600)),
+                                    if (selectedProduct != null) ...[
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFFFF3CD),
+                                          borderRadius: BorderRadius.circular(6),
+                                          border: Border.all(color: _C.gold.withOpacity(0.5)),
+                                        ),
+                                        child: Text(
+                                          'Old: ₹${selectedProduct!.oldPrice.toStringAsFixed(0)}',
+                                          style: const TextStyle(color: _C.gold,
+                                              fontSize: 10, fontWeight: FontWeight.w700),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                TextField(
+                                  controller: priceCtrl,
+                                  keyboardType: TextInputType.number,
+                                  onChanged: (_) => recalc(ss),
+                                  style: const TextStyle(color: _C.textDark,
+                                      fontSize: 14, fontWeight: FontWeight.w500),
+                                  decoration: InputDecoration(
+                                    filled: true, fillColor: _C.bg,
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
+                                        borderSide: const BorderSide(color: _C.border)),
+                                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
+                                        borderSide: const BorderSide(color: _C.border)),
+                                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
+                                        borderSide: const BorderSide(color: _C.primary, width: 1.5)),
+                                  ),
+                                ),
+                              ],
                             ),
-                            child: const Text('Cancel',
-                                style: TextStyle(
-                                    color: _C.textMid,
-                                    fontWeight: FontWeight.w600)),
                           ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    const Text('Quantity',
+                                        style: TextStyle(color: _C.textMid,
+                                            fontSize: 12, fontWeight: FontWeight.w600)),
+                                    if (selectedProduct != null) ...[
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: _C.primaryLt,
+                                          borderRadius: BorderRadius.circular(6),
+                                          border: Border.all(color: _C.primary.withOpacity(0.35)),
+                                        ),
+                                        child: Text(
+                                          'Stock: ${selectedProduct!.currentStock}',
+                                          style: const TextStyle(color: _C.primary,
+                                              fontSize: 10, fontWeight: FontWeight.w700),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                TextField(
+                                  controller: qtyCtrl,
+                                  keyboardType: TextInputType.number,
+                                  onChanged: (_) => recalc(ss),
+                                  style: const TextStyle(color: _C.textDark,
+                                      fontSize: 14, fontWeight: FontWeight.w500),
+                                  decoration: InputDecoration(
+                                    filled: true, fillColor: _C.bg,
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
+                                        borderSide: const BorderSide(color: _C.border)),
+                                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
+                                        borderSide: const BorderSide(color: _C.border)),
+                                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
+                                        borderSide: const BorderSide(color: _C.primary, width: 1.5)),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+
+                      // Tax
+                      _DialogField(
+                        label: 'Tax (%)',
+                        controller: taxCtrl,
+                        keyboardType: TextInputType.number,
+                        onChanged: (_) => recalc(ss),
+                      ),
+                      const SizedBox(height: 14),
+
+                      // Item total preview
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: _C.primaryLt,
+                          borderRadius: BorderRadius.circular(14),
+                          border:
+                          Border.all(color: _C.primary.withOpacity(0.2)),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          flex: 2,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              final productName =
-                              productCtrl.text.trim();
-                              if (productName.isEmpty) return;
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Flexible(
+                              child: Text('Item Total',
+                                  style: TextStyle(
+                                      color: _C.primary,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14)),
+                            ),
+                            const SizedBox(width: 8),
+                            Flexible(
+                              child: Text(
+                                '₹${previewTotal.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                    color: _C.primary,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 18),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
 
-                              final newPrice =
-                                  double.tryParse(priceCtrl.text) ?? 0;
-                              final newQty =
-                                  int.tryParse(qtyCtrl.text) ?? 1;
-                              final newTax =
-                                  double.tryParse(taxCtrl.text) ?? 0;
-
-                              setState(() {
-                                if (editIndex != null) {
-                                  _items[editIndex] = OrderItem(
-                                    product:  productName,
-                                    price:    newPrice,
-                                    quantity: newQty,
-                                    taxRate:  newTax,
-                                    taxType:  fixedTaxType,
-                                  );
-                                } else {
-                                  final existIdx = _existingIndexFor(
-                                      productName);
-                                  if (existIdx != null) {
-                                    final old = _items[existIdx];
-                                    _items[existIdx] = OrderItem(
-                                      product:  old.product,
-                                      price:    newPrice,
-                                      quantity: old.quantity + newQty,
-                                      taxRate:  newTax,
-                                      taxType:  fixedTaxType,
-                                    );
-                                  } else {
-                                    _items.add(OrderItem(
+                      // Buttons
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => Navigator.pop(ctx),
+                              style: OutlinedButton.styleFrom(
+                                padding:
+                                const EdgeInsets.symmetric(vertical: 14),
+                                side: const BorderSide(color: _C.border),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14)),
+                              ),
+                              child: const Text('Cancel',
+                                  style: TextStyle(
+                                      color: _C.textMid,
+                                      fontWeight: FontWeight.w600)),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            flex: 2,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                final productName = productCtrl.text.trim();
+                                if (productName.isEmpty) return;
+                                final newPrice =
+                                    double.tryParse(priceCtrl.text) ?? 0;
+                                final newQty =
+                                    int.tryParse(qtyCtrl.text) ?? 1;
+                                final newTax =
+                                    double.tryParse(taxCtrl.text) ?? 0;
+                                setState(() {
+                                  if (editIndex != null) {
+                                    _items[editIndex] = OrderItem(
                                       product:  productName,
                                       price:    newPrice,
                                       quantity: newQty,
                                       taxRate:  newTax,
                                       taxType:  fixedTaxType,
-                                    ));
+                                    );
+                                  } else {
+                                    final existIdx =
+                                    _existingIndexFor(productName);
+                                    if (existIdx != null) {
+                                      final old = _items[existIdx];
+                                      _items[existIdx] = OrderItem(
+                                        product:  old.product,
+                                        price:    newPrice,
+                                        quantity: old.quantity + newQty,
+                                        taxRate:  newTax,
+                                        taxType:  fixedTaxType,
+                                      );
+                                    } else {
+                                      _items.add(OrderItem(
+                                        product:  productName,
+                                        price:    newPrice,
+                                        quantity: newQty,
+                                        taxRate:  newTax,
+                                        taxType:  fixedTaxType,
+                                      ));
+                                    }
                                   }
-                                }
-                                _selectedIndex = null;
-                              });
-                              Navigator.pop(ctx);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _C.primary,
-                              padding:
-                              const EdgeInsets.symmetric(vertical: 14),
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14)),
-                            ),
-                            child: Text(
-                              editIndex != null ? 'Update' : 'Add Item',
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 15),
+                                  _selectedIndex = null;
+                                  // Keep order items section open after adding
+                                  _openSection = _kOrderItems;
+                                });
+                                Navigator.pop(ctx);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _C.primary,
+                                padding:
+                                const EdgeInsets.symmetric(vertical: 14),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14)),
+                              ),
+                              child: Text(
+                                editIndex != null ? 'Update' : 'Add Item',
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 15),
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
+                      SizedBox(
+                          height: MediaQuery.of(ctx).viewInsets.bottom + 16),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-        );
-      }),
+        ),
+      ),
     );
-  }
-
-  void _deleteSelected() {
-    if (_selectedIndex == null) {
-      _showSnack('Select an item to delete', _C.red);
-      return;
-    }
-    setState(() {
-      _items.removeAt(_selectedIndex!);
-      _selectedIndex = null;
-    });
   }
 
   void _showSnack(String msg, Color color) {
@@ -1037,23 +946,20 @@ class _SalesOrderScreenState extends State<SalesOrderScreen>
       _referenceCtrl.clear();
       _discountCtrl.clear();
       _items.clear();
-      _selectedIndex        = null;
-      _selectedDate         = DateTime.now();
-      _showViewOrders       = true;
-      _orderDetailsExpanded = false;
-      _detailsArrowAnim.value = 1.0;
+      _selectedIndex      = null;
+      _selectedDate       = DateTime.now();
+      _showViewOrders     = true;
+      _openSection        = _kOrderDetails;
     });
 
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Row(
         children: [
-          const Icon(Icons.check_circle_rounded,
-              color: Colors.white, size: 20),
+          const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
           const SizedBox(width: 10),
           Flexible(
-            child: Text(
-                'Order saved! Total ₹${order.grandTotal.toStringAsFixed(2)}'),
-          ),
+              child: Text(
+                  'Order saved! Total ₹${order.grandTotal.toStringAsFixed(2)}')),
         ],
       ),
       backgroundColor: _C.primary,
@@ -1074,9 +980,7 @@ class _SalesOrderScreenState extends State<SalesOrderScreen>
           Expanded(
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
-              child: _showViewOrders
-                  ? _buildViewOrders()
-                  : _buildOrderForm(),
+              child: _showViewOrders ? _buildViewOrders() : _buildOrderForm(),
             ),
           ),
         ],
@@ -1094,10 +998,7 @@ class _SalesOrderScreenState extends State<SalesOrderScreen>
           end: Alignment.bottomRight,
         ),
         boxShadow: [
-          BoxShadow(
-              color: Color(0x441B8A3E),
-              blurRadius: 16,
-              offset: Offset(0, 6)),
+          BoxShadow(color: Color(0x441B8A3E), blurRadius: 16, offset: Offset(0, 6)),
         ],
       ),
       child: SafeArea(
@@ -1124,48 +1025,25 @@ class _SalesOrderScreenState extends State<SalesOrderScreen>
                     padding: const EdgeInsets.all(8),
                   ),
                   const Expanded(
-                    child: Text(
-                      'Sales Order',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 19,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.3,
-                      ),
-                    ),
-                  ),
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 200),
-                    child: Container(
-                      key: ValueKey(_showViewOrders),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        _showViewOrders
-                            ? '${_savedOrders.length} order${_savedOrders.length == 1 ? '' : 's'}'
-                            : '${_items.length} item${_items.length == 1 ? '' : 's'}',
-                        style: const TextStyle(
+                    child: Text('Sales Order',
+                        style: TextStyle(
                             color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600),
-                      ),
-                    ),
+                            fontSize: 19,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.3)),
                   ),
+
                 ],
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 6),
+              padding: const EdgeInsets.fromLTRB(16, 2, 16, 10),
               child: Container(
-                height: 46,
-                padding: const EdgeInsets.all(5),
+                height: 48,
+                padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(26),
+                  borderRadius: BorderRadius.circular(22),
                 ),
                 child: Row(
                   children: [
@@ -1192,9 +1070,9 @@ class _SalesOrderScreenState extends State<SalesOrderScreen>
   }
 
   Widget _tab({
-    required String    label,
-    required IconData  icon,
-    required bool      active,
+    required String       label,
+    required IconData     icon,
+    required bool         active,
     required VoidCallback onTap,
   }) {
     return Expanded(
@@ -1203,9 +1081,10 @@ class _SalesOrderScreenState extends State<SalesOrderScreen>
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 220),
           curve: Curves.easeInOut,
+          height: double.infinity,
           decoration: BoxDecoration(
             color: active ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(16),
             boxShadow: active
                 ? [
               BoxShadow(
@@ -1218,15 +1097,12 @@ class _SalesOrderScreenState extends State<SalesOrderScreen>
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon,
-                  size: 18,
-                  color: active ? _C.primary : Colors.white),
+              Icon(icon, size: 18, color: active ? _C.primary : Colors.white),
               const SizedBox(width: 6),
               Text(label,
                   style: TextStyle(
                     fontSize: active ? 15 : 14,
-                    fontWeight:
-                    active ? FontWeight.w800 : FontWeight.w600,
+                    fontWeight: active ? FontWeight.w800 : FontWeight.w600,
                     color: active ? _C.primary : Colors.white,
                   )),
             ],
@@ -1238,407 +1114,370 @@ class _SalesOrderScreenState extends State<SalesOrderScreen>
 
   // ── Order Form ────────────────────────────────────────────────────────────
   Widget _buildOrderForm() {
-    return Column(
+    return SingleChildScrollView(
       key: const ValueKey('form'),
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 600),
-              child: _buildOrderInfoCard(),
-            ),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      physics: const BouncingScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Order Details accordion ──────────────────────────────────
+          _accordionCard(
+            sectionKey: _kOrderDetails,
+            icon: Icons.receipt_long_rounded,
+            title: 'Order Details',
+            child: _buildOrderDetailsBody(),
           ),
-        ),
-        const SizedBox(height: 12),
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-            physics: const BouncingScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildAddBar(),
-                const SizedBox(height: 16),
-                if (_items.isNotEmpty) ...[
-                  _buildItemsCards(),
-                  const SizedBox(height: 16),
-                  _buildSummaryCard(),
-                  const SizedBox(height: 16),
-                ],
-                _buildScrollableBottomBar(),
-                SizedBox(
-                    height: MediaQuery.of(context).padding.bottom + 16),
-              ],
-            ),
+          const SizedBox(height: 14),
+
+          // ── Order Items accordion (+ opens sheet) ────────────────────
+          _accordionCard(
+            sectionKey: _kOrderItems,
+            icon: Icons.shopping_cart_rounded,
+            title: 'Order Items',
+            onHeaderTap: () => _showItemSheet(),
+            child: _buildItemsBody(),
           ),
-        ),
-      ],
+
+          if (_items.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _buildSummaryCard(),
+          ],
+
+          const SizedBox(height: 16),
+          _buildSaveButton(),
+          SizedBox(height: MediaQuery.of(context).padding.bottom + 24),
+        ],
+      ),
     );
   }
 
-  // ── Order Details card (collapsible) ─────────────────────────────────────
-  Widget _buildOrderInfoCard() {
-    return Container(
+  // ── Accordion Card (shared) ───────────────────────────────────────────────
+  Widget _accordionCard({
+    required String   sectionKey,
+    required IconData icon,
+    required String   title,
+    required Widget   child,
+    VoidCallback?     onHeaderTap,
+  }) {
+    final isExpanded = _openSection == sectionKey;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
       decoration: BoxDecoration(
         color: _C.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 16,
-              offset: const Offset(0, 4)),
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           InkWell(
-            onTap: _toggleOrderDetails,
-            borderRadius: _orderDetailsExpanded
-                ? const BorderRadius.only(
-              topLeft:  Radius.circular(20),
-              topRight: Radius.circular(20),
-            )
-                : BorderRadius.circular(20),
+            onTap: () {
+              if (onHeaderTap != null) {
+                onHeaderTap();
+              } else {
+                _toggleSection(sectionKey);
+              }
+            },
+            borderRadius: BorderRadius.circular(20),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(18),
               child: Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                        color: _C.primaryLt,
-                        borderRadius: BorderRadius.circular(10)),
-                    child: const Icon(Icons.receipt_long_rounded,
-                        color: _C.primary, size: 18),
+                      color: isExpanded ? _C.primary : _C.primaryLt,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(icon,
+                        color: isExpanded ? Colors.white : _C.primary,
+                        size: 18),
                   ),
                   const SizedBox(width: 10),
-                  const Expanded(
-                    child: Text('Order Details',
-                        style: TextStyle(
+                  Expanded(
+                    child: Text(title,
+                        style: const TextStyle(
                             color: _C.textDark,
                             fontSize: 15,
                             fontWeight: FontWeight.w700)),
                   ),
-                  RotationTransition(
-                    turns: Tween(begin: 0.0, end: 0.5).animate(
-                        CurvedAnimation(
-                            parent: _detailsArrowAnim,
-                            curve: Curves.easeInOut)),
-                    child: Container(
+                  // If onHeaderTap provided → show "+" (items section)
+                  // else → show chevron (toggle section)
+                  if (onHeaderTap == null)
+                    AnimatedRotation(
+                      turns: isExpanded ? 0.5 : 0.0,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: _C.primaryLt,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.keyboard_arrow_down_rounded,
+                            color: _C.primary, size: 20),
+                      ),
+                    )
+                  else
+                    Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                          color: _C.primaryLt,
-                          borderRadius: BorderRadius.circular(8)),
-                      child: const Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          color: _C.primary,
-                          size: 20),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          ClipRect(
-            child: AnimatedSize(
-              duration: const Duration(milliseconds: 280),
-              curve: Curves.easeInOut,
-              alignment: Alignment.topCenter,
-              child: _orderDetailsExpanded
-                  ? Padding(
-                padding:
-                const EdgeInsets.fromLTRB(16, 0, 16, 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Divider(height: 1, color: _C.border),
-                    const SizedBox(height: 12),
-                    const _FieldLabel(label: 'Select Date'),
-                    const SizedBox(height: 4),
-                    GestureDetector(
-                      onTap: _pickDate,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: _C.bg,
-                          borderRadius:
-                          BorderRadius.circular(14),
-                          border: Border.all(color: _C.border),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                                Icons.calendar_month_rounded,
-                                color: _C.primary,
-                                size: 20),
-                            const SizedBox(width: 10),
-                            Text(
-                              DateFormat('dd-MM-yyyy')
-                                  .format(_selectedDate),
-                              style: const TextStyle(
-                                  color: _C.textDark,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600),
-                            ),
-                            const Spacer(),
-                            const Icon(
-                                Icons.keyboard_arrow_down_rounded,
-                                color: _C.textMid,
-                                size: 20),
-                          ],
-                        ),
+                        color: _C.primaryLt,
+                        borderRadius: BorderRadius.circular(8),
                       ),
+                      child: const Icon(Icons.add_rounded,
+                          color: _C.primary, size: 16),
                     ),
-                    const SizedBox(height: 12),
-                    const _FieldLabel(label: 'Customer Name'),
-                    const SizedBox(height: 4),
-                    _InputField(
-                        controller: _customerCtrl,
-                        hint: 'Enter customer name'),
-                    const SizedBox(height: 12),
-                    const _FieldLabel(label: 'Reference'),
-                    const SizedBox(height: 4),
-                    _InputField(
-                        controller: _referenceCtrl,
-                        hint: 'Enter reference number'),
-                  ],
-                ),
-              )
-                  : const SizedBox(
-                  width: double.infinity, height: 0),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAddBar() {
-    return Container(
-      padding:
-      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: _C.surface,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 16,
-              offset: const Offset(0, 4)),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-                color: _C.primaryLt,
-                borderRadius: BorderRadius.circular(10)),
-            child: const Icon(Icons.shopping_cart_rounded,
-                color: _C.primary, size: 18),
-          ),
-          const SizedBox(width: 10),
-          const Text('Order Items',
-              style: TextStyle(
-                  color: _C.textDark,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700)),
-          const Spacer(),
-          GestureDetector(
-            onTap: () => _showItemDialog(),
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: _C.primary,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                      color: _C.primary.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3)),
-                ],
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.add_rounded, color: Colors.white, size: 18),
-                  SizedBox(width: 6),
-                  Text('ADD ITEM',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.5)),
                 ],
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildItemsCards() {
-    return Container(
-      decoration: BoxDecoration(
-        color: _C.surface,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 16,
-              offset: const Offset(0, 4)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Row(
+          AnimatedCrossFade(
+            firstChild: const SizedBox(width: double.infinity, height: 0),
+            secondChild: Column(
               children: [
-                const Text('Items',
-                    style: TextStyle(
-                        color: _C.textDark,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700)),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: _C.primaryLt,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text('${_items.length}',
-                      style: const TextStyle(
-                          color: _C.primary,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700)),
+                Divider(height: 1, color: _C.border.withOpacity(0.7)),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+                  child: child,
                 ),
               ],
             ),
+            crossFadeState: isExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 300),
+            sizeCurve: Curves.easeInOut,
           ),
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _items.length,
-            separatorBuilder: (_, __) => Divider(
-                height: 1,
-                indent: 16,
-                endIndent: 16,
-                color: _C.border),
-            itemBuilder: (_, i) {
-              final item     = _items[i];
-              final selected = _selectedIndex == i;
-              return GestureDetector(
-                onTap: () => setState(
-                        () => _selectedIndex = selected ? null : i),
-                onDoubleTap: () =>
-                    _showItemDialog(existing: item, editIndex: i),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 5),
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: selected ? _C.primaryLt : _C.bg,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: selected
-                          ? _C.primary.withOpacity(0.4)
-                          : _C.border,
-                    ),
+        ],
+      ),
+    );
+  }
+
+  // ── Order Details Body ────────────────────────────────────────────────────
+  Widget _buildOrderDetailsBody() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _FieldLabel(label: 'Select Date'),
+        const SizedBox(height: 6),
+        GestureDetector(
+          onTap: _pickDate,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            decoration: BoxDecoration(
+              color: _C.bg,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: _C.border),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.calendar_month_rounded,
+                    color: _C.primary, size: 20),
+                const SizedBox(width: 10),
+                Text(
+                  DateFormat('dd-MM-yyyy').format(_selectedDate),
+                  style: const TextStyle(
+                      color: _C.textDark,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600),
+                ),
+                const Spacer(),
+                const Icon(Icons.keyboard_arrow_down_rounded,
+                    color: _C.textMid, size: 20),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+        const _FieldLabel(label: 'Customer Name'),
+        const SizedBox(height: 6),
+        _InputField(controller: _customerCtrl, hint: 'Enter customer name'),
+        const SizedBox(height: 14),
+        const _FieldLabel(label: 'Reference'),
+        const SizedBox(height: 6),
+        _InputField(controller: _referenceCtrl, hint: 'Enter reference number'),
+      ],
+    );
+  }
+
+  // ── Items Body (inside accordion) ─────────────────────────────────────────
+  Widget _buildItemsBody() {
+    if (_items.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        child: Center(
+          child: Column(
+            children: [
+              Container(
+                width: 70, height: 70,
+                decoration: const BoxDecoration(
+                    color: _C.primaryLt, shape: BoxShape.circle),
+                child: const Icon(Icons.shopping_bag_outlined,
+                    color: _C.primary, size: 36),
+              ),
+              const SizedBox(height: 12),
+              const Text('No Items Added',
+                  style: TextStyle(
+                      color: _C.textDark,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600)),
+              const SizedBox(height: 4),
+              const Text('Tap "+" to add items',
+                  style: TextStyle(
+                      color: _C.textMid,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400)),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: _C.primaryLt,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                    '${_items.length} item${_items.length == 1 ? '' : 's'}',
+                    style: const TextStyle(
+                        color: _C.primary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700)),
+              ),
+              const Spacer(),
+              const Text('Tap "+" to add more',
+                  style: TextStyle(
+                      color: _C.textMid,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500)),
+            ],
+          ),
+        ),
+        ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _items.length,
+          separatorBuilder: (_, __) =>
+              Divider(height: 1, color: _C.border),
+          itemBuilder: (_, i) {
+            final item     = _items[i];
+            final selected = _selectedIndex == i;
+            return GestureDetector(
+              onTap: () =>
+                  setState(() => _selectedIndex = selected ? null : i),
+              onDoubleTap: () =>
+                  _showItemSheet(existing: item, editIndex: i),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: selected ? _C.primaryLt : _C.bg,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: selected
+                        ? _C.primary.withOpacity(0.4)
+                        : _C.border,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 26,
-                            height: 26,
-                            decoration: BoxDecoration(
-                              color: selected
-                                  ? _C.primary
-                                  : _C.primary.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Center(
-                              child: Text('${i + 1}',
-                                  style: TextStyle(
-                                      color: selected
-                                          ? Colors.white
-                                          : _C.primary,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w800)),
-                            ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 24, height: 24,
+                          decoration: BoxDecoration(
+                            color: selected
+                                ? _C.primary
+                                : _C.primary.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(7),
                           ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              item.product,
+                          child: Center(
+                            child: Text('${i + 1}',
+                                style: TextStyle(
+                                    color: selected
+                                        ? Colors.white
+                                        : _C.primary,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w800)),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(item.product,
                               style: const TextStyle(
                                   color: _C.textDark,
                                   fontSize: 13,
                                   fontWeight: FontWeight.w700),
                               maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '₹${item.grandTotal.toStringAsFixed(2)}',
+                              overflow: TextOverflow.ellipsis),
+                        ),
+                        const SizedBox(width: 8),
+                        Text('₹${item.grandTotal.toStringAsFixed(2)}',
                             style: const TextStyle(
                                 color: _C.primary,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w900),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      // ── Info chips row ──────────────────────────────
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 4,
-                        children: [
-                          _InfoChip(
-                              icon: Icons.currency_rupee_rounded,
-                              value:
-                              '₹${item.price.toStringAsFixed(0)}'),
-                          _InfoChip(
-                              icon: Icons.layers_rounded,
-                              value: '× ${item.quantity}'),
-                          _InfoChip(
-                              icon: Icons.percent_rounded,
-                              value:
-                              '${item.taxRate.toStringAsFixed(0)}%'),
-                          _InfoChip(
-                              icon: Icons.edit_rounded,
-                              value: 'double-tap to edit'),
-                          _DeleteChip(onTap: () => _deleteItem(i)),
-                        ],
-                      ),
-                    ],
-                  ),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800)),
+                        const SizedBox(width: 4),
+                        // Quick delete (X) like quotation screen
+                        GestureDetector(
+                          onTap: () => _deleteItem(i),
+                          child: const Icon(Icons.close_rounded,
+                              color: _C.textLight, size: 18),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 4,
+                      runSpacing: 4,
+                      children: [
+                        _InfoChip(
+                            icon: Icons.currency_rupee_rounded,
+                            value: '₹${item.price.toStringAsFixed(0)}'),
+                        _InfoChip(
+                            icon: Icons.layers_rounded,
+                            value: '× ${item.quantity}'),
+                        _InfoChip(
+                            icon: Icons.percent_rounded,
+                            value: '${item.taxRate.toStringAsFixed(0)}%'),
+                        _InfoChip(
+                            icon: Icons.edit_rounded,
+                            value: 'double-tap to edit'),
+                      ],
+                    ),
+                  ],
                 ),
-              );
-            },
-          ),
-          const SizedBox(height: 12),
-        ],
-      ),
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 
+  // ── Summary Card ─────────────────────────────────────────────────────────
   Widget _buildSummaryCard() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -1655,6 +1494,25 @@ class _SalesOrderScreenState extends State<SalesOrderScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                    color: _C.primaryLt,
+                    borderRadius: BorderRadius.circular(10)),
+                child: const Icon(Icons.summarize_rounded,
+                    color: _C.primary, size: 18),
+              ),
+              const SizedBox(width: 10),
+              const Text('Order Summary',
+                  style: TextStyle(
+                      color: _C.textDark,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700)),
+            ],
+          ),
+          const SizedBox(height: 14),
           const _FieldLabel(label: 'Discount (₹)'),
           const SizedBox(height: 8),
           _InputField(
@@ -1667,15 +1525,31 @@ class _SalesOrderScreenState extends State<SalesOrderScreen>
           _SummaryRow('Subtotal', '₹${_subTotal.toStringAsFixed(2)}'),
           _SummaryRow('Tax', '₹${_taxTotal.toStringAsFixed(2)}'),
           if (_discount > 0)
-            _SummaryRow(
-                'Discount', '− ₹${_discount.toStringAsFixed(2)}',
+            _SummaryRow('Discount', '− ₹${_discount.toStringAsFixed(2)}',
                 isRed: true),
+          const Divider(height: 20, color: _C.border),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Grand Total',
+                  style: TextStyle(
+                      color: _C.textDark,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700)),
+              Text('₹${_grandTotal.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                      color: _C.primary,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900)),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildScrollableBottomBar() {
+  // ── Save Button ───────────────────────────────────────────────────────────
+  Widget _buildSaveButton() {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -1697,8 +1571,7 @@ class _SalesOrderScreenState extends State<SalesOrderScreen>
           onTap: _save,
           borderRadius: BorderRadius.circular(18),
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 24, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             child: Row(
               children: [
                 Expanded(
@@ -1713,14 +1586,12 @@ class _SalesOrderScreenState extends State<SalesOrderScreen>
                               fontWeight: FontWeight.w600,
                               letterSpacing: 1.0)),
                       const SizedBox(height: 2),
-                      Text(
-                        '₹${_grandTotal.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900),
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      Text('₹${_grandTotal.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900),
+                          overflow: TextOverflow.ellipsis),
                     ],
                   ),
                 ),
@@ -1732,14 +1603,13 @@ class _SalesOrderScreenState extends State<SalesOrderScreen>
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color: Colors.white.withOpacity(0.3)),
+                      border:
+                      Border.all(color: Colors.white.withOpacity(0.3)),
                     ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.save_rounded,
-                            color: Colors.white, size: 18),
+                        Icon(Icons.save_rounded, color: Colors.white, size: 18),
                         SizedBox(width: 8),
                         Text('SAVE ORDER',
                             style: TextStyle(
@@ -1768,8 +1638,7 @@ class _SalesOrderScreenState extends State<SalesOrderScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 90,
-              height: 90,
+              width: 90, height: 90,
               decoration: const BoxDecoration(
                   color: _C.primaryLt, shape: BoxShape.circle),
               child: const Icon(Icons.receipt_long_rounded,
@@ -1786,14 +1655,11 @@ class _SalesOrderScreenState extends State<SalesOrderScreen>
                 style: TextStyle(color: _C.textMid, fontSize: 14)),
             const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: () =>
-                  setState(() => _showViewOrders = false),
-              icon: const Icon(Icons.add_rounded,
-                  color: Colors.white, size: 18),
+              onPressed: () => setState(() => _showViewOrders = false),
+              icon: const Icon(Icons.add_rounded, color: Colors.white, size: 18),
               label: const Text('Create Order',
                   style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700)),
+                      color: Colors.white, fontWeight: FontWeight.w700)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: _C.primary,
                 padding: const EdgeInsets.symmetric(
@@ -1834,8 +1700,7 @@ class _SalesOrderScreenState extends State<SalesOrderScreen>
         child: Column(
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [_C.primary, _C.primaryDk],
@@ -1852,30 +1717,24 @@ class _SalesOrderScreenState extends State<SalesOrderScreen>
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Text(
-                      'SO-${_savedOrders.length - index}',
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700),
-                    ),
+                    child: Text('SO-${_savedOrders.length - index}',
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700)),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: Text(
-                      order.customer,
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    child: Text(order.customer,
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700),
+                        overflow: TextOverflow.ellipsis),
                   ),
-                  Text(
-                    DateFormat('dd MMM yyyy').format(order.date),
-                    style: const TextStyle(
-                        color: Colors.white70, fontSize: 12),
-                  ),
+                  Text(DateFormat('dd MMM yyyy').format(order.date),
+                      style:
+                      const TextStyle(color: Colors.white70, fontSize: 12)),
                 ],
               ),
             ),
@@ -1888,14 +1747,11 @@ class _SalesOrderScreenState extends State<SalesOrderScreen>
                       _statBox('Items', '${order.items.length}',
                           Icons.list_rounded),
                       const SizedBox(width: 10),
-                      _statBox(
-                          'Tax',
-                          '₹${order.taxTotal.toStringAsFixed(0)}',
+                      _statBox('Tax', '₹${order.taxTotal.toStringAsFixed(0)}',
                           Icons.percent_rounded),
                       if (order.discount > 0) ...[
                         const SizedBox(width: 10),
-                        _statBox(
-                            'Discount',
+                        _statBox('Discount',
                             '₹${order.discount.toStringAsFixed(0)}',
                             Icons.discount_rounded),
                       ],
@@ -1922,11 +1778,9 @@ class _SalesOrderScreenState extends State<SalesOrderScreen>
                     child: Row(
                       children: [
                         Container(
-                          width: 6,
-                          height: 6,
+                          width: 6, height: 6,
                           decoration: const BoxDecoration(
-                              color: _C.primary,
-                              shape: BoxShape.circle),
+                              color: _C.primary, shape: BoxShape.circle),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -1938,13 +1792,11 @@ class _SalesOrderScreenState extends State<SalesOrderScreen>
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis),
                         ),
-                        Text(
-                          '₹${item.grandTotal.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                              color: _C.textDark,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700),
-                        ),
+                        Text('₹${item.grandTotal.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                                color: _C.textDark,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700)),
                       ],
                     ),
                   )),
@@ -1969,13 +1821,11 @@ class _SalesOrderScreenState extends State<SalesOrderScreen>
                               color: _C.textMid,
                               fontSize: 13,
                               fontWeight: FontWeight.w600)),
-                      Text(
-                        '₹${order.grandTotal.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                            color: _C.primary,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w900),
-                      ),
+                      Text('₹${order.grandTotal.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                              color: _C.primary,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w900)),
                     ],
                   ),
                 ],
@@ -1990,8 +1840,7 @@ class _SalesOrderScreenState extends State<SalesOrderScreen>
   Widget _statBox(String label, String value, IconData icon) {
     return Expanded(
       child: Container(
-        padding:
-        const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
           color: _C.primaryLt,
           borderRadius: BorderRadius.circular(10),
@@ -2029,7 +1878,6 @@ class _SalesOrderScreenState extends State<SalesOrderScreen>
 class _FieldLabel extends StatelessWidget {
   final String label;
   const _FieldLabel({required this.label});
-
   @override
   Widget build(BuildContext context) => Text(label,
       style: const TextStyle(
@@ -2058,31 +1906,22 @@ class _InputField extends StatelessWidget {
     keyboardType: keyboardType,
     onChanged: onChanged,
     style: const TextStyle(
-        color: _C.textDark,
-        fontSize: 13,
-        fontWeight: FontWeight.w500),
+        color: _C.textDark, fontSize: 13, fontWeight: FontWeight.w500),
     decoration: InputDecoration(
       hintText: hint,
-      hintStyle:
-      const TextStyle(color: _C.textLight, fontSize: 12),
-      filled: true,
-      fillColor: _C.bg,
-      isDense: true,
+      hintStyle: const TextStyle(color: _C.textLight, fontSize: 12),
+      filled: true, fillColor: _C.bg, isDense: true,
       contentPadding:
       const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: _C.border),
-      ),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: _C.border)),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: _C.border),
-      ),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: _C.border)),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide:
-        const BorderSide(color: _C.primary, width: 1.5),
-      ),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: _C.primary, width: 1.5)),
     ),
   );
 }
@@ -2106,36 +1945,27 @@ class _DialogField extends StatelessWidget {
     children: [
       Text(label,
           style: const TextStyle(
-              color: _C.textMid,
-              fontSize: 12,
-              fontWeight: FontWeight.w600)),
+              color: _C.textMid, fontSize: 12, fontWeight: FontWeight.w600)),
       const SizedBox(height: 6),
       TextField(
         controller: controller,
         keyboardType: keyboardType,
         onChanged: onChanged,
         style: const TextStyle(
-            color: _C.textDark,
-            fontSize: 14,
-            fontWeight: FontWeight.w500),
+            color: _C.textDark, fontSize: 14, fontWeight: FontWeight.w500),
         decoration: InputDecoration(
-          filled: true,
-          fillColor: _C.bg,
-          contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16, vertical: 12),
+          filled: true, fillColor: _C.bg,
+          contentPadding:
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: _C.border),
-          ),
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: _C.border)),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: _C.border),
-          ),
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: _C.border)),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide:
-            const BorderSide(color: _C.primary, width: 1.5),
-          ),
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: _C.primary, width: 1.5)),
         ),
       ),
     ],
@@ -2143,11 +1973,9 @@ class _DialogField extends StatelessWidget {
 }
 
 class _SummaryRow extends StatelessWidget {
-  final String label;
-  final String value;
+  final String label, value;
   final bool   isRed;
   const _SummaryRow(this.label, this.value, {this.isRed = false});
-
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 4),
@@ -2156,9 +1984,7 @@ class _SummaryRow extends StatelessWidget {
       children: [
         Text(label,
             style: const TextStyle(
-                color: _C.textMid,
-                fontSize: 13,
-                fontWeight: FontWeight.w500)),
+                color: _C.textMid, fontSize: 13, fontWeight: FontWeight.w500)),
         Text(value,
             style: TextStyle(
                 color: isRed ? _C.red : _C.textDark,
@@ -2173,11 +1999,9 @@ class _InfoChip extends StatelessWidget {
   final IconData icon;
   final String   value;
   const _InfoChip({required this.icon, required this.value});
-
   @override
   Widget build(BuildContext context) => Container(
-    padding:
-    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
     decoration: BoxDecoration(
       color: _C.surface,
       borderRadius: BorderRadius.circular(8),
@@ -2190,40 +2014,8 @@ class _InfoChip extends StatelessWidget {
         const SizedBox(width: 4),
         Text(value,
             style: const TextStyle(
-                color: _C.textDark,
-                fontSize: 11,
-                fontWeight: FontWeight.w600)),
+                color: _C.textDark, fontSize: 11, fontWeight: FontWeight.w600)),
       ],
-    ),
-  );
-}
-
-class _DeleteChip extends StatelessWidget {
-  final VoidCallback onTap;
-  const _DeleteChip({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) => GestureDetector(
-    onTap: onTap,
-    child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFEF2F2),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _C.red.withOpacity(0.35)),
-      ),
-      child: const Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.delete_rounded, color: _C.red, size: 11),
-          SizedBox(width: 4),
-          Text('delete',
-              style: TextStyle(
-                  color: _C.red,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600)),
-        ],
-      ),
     ),
   );
 }

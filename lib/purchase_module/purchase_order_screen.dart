@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_theme.dart';
+import 'grn_screen.dart';
 
 // ── Color palette ──────────────────────────────────────────────────────────
 class _C {
@@ -16,10 +17,49 @@ class _C {
   static const red       = Color(0xFFEF4444);
   static const gold      = Color(0xFFF59E0B);
   static const border    = Color(0xFFE2E8F0);
+  static const blue      = Color(0xFF1565C0);
 }
 
-// ── Supplier Autocomplete Names (A–Z) ──────────────────────────────────────
-class SupplierNames {
+// ── Product Info with Price & Stock ────────────────────────────────────────
+class ProductInfo {
+  final String name;
+  final double oldPrice;
+  final int    currentStock;
+  ProductInfo({required this.name, required this.oldPrice, required this.currentStock});
+}
+
+// ── Product Database ──────────────────────────────────────────────────────
+final Map<String, ProductInfo> _productDatabase = {
+  'AACHI HYBRID TOMATO SEEDS 10G': ProductInfo(name: 'AACHI HYBRID TOMATO SEEDS 10G', oldPrice: 85.00, currentStock: 45),
+  'AADHI PADDY SEEDS 5 KGS': ProductInfo(name: 'AADHI PADDY SEEDS 5 KGS', oldPrice: 320.00, currentStock: 120),
+  'AADHI PADDY SEEDS 10 KGS': ProductInfo(name: 'AADHI PADDY SEEDS 10 KGS', oldPrice: 620.00, currentStock: 80),
+  'AARTHY HYBRID CHILLI SEEDS 10G': ProductInfo(name: 'AARTHY HYBRID CHILLI SEEDS 10G', oldPrice: 95.00, currentStock: 60),
+  'AARTHY HYBRID CHILLI SEEDS 25G': ProductInfo(name: 'AARTHY HYBRID CHILLI SEEDS 25G', oldPrice: 220.00, currentStock: 40),
+  'ADITYA HYBRID MAIZE SEEDS 1 KGS': ProductInfo(name: 'ADITYA HYBRID MAIZE SEEDS 1 KGS', oldPrice: 180.00, currentStock: 75),
+  'ADITYA HYBRID MAIZE SEEDS 5 KGS': ProductInfo(name: 'ADITYA HYBRID MAIZE SEEDS 5 KGS', oldPrice: 850.00, currentStock: 35),
+  'AGNI HYBRID COTTON SEEDS 450G': ProductInfo(name: 'AGNI HYBRID COTTON SEEDS 450G', oldPrice: 420.00, currentStock: 25),
+  'AGNI HYBRID COTTON SEEDS 900G': ProductInfo(name: 'AGNI HYBRID COTTON SEEDS 900G', oldPrice: 810.00, currentStock: 18),
+  'AGRI GOLD PADDY SEEDS 5 KGS': ProductInfo(name: 'AGRI GOLD PADDY SEEDS 5 KGS', oldPrice: 310.00, currentStock: 100),
+  'AGRI GOLD PADDY SEEDS 26 KGS': ProductInfo(name: 'AGRI GOLD PADDY SEEDS 26 KGS', oldPrice: 1550.00, currentStock: 15),
+  'HYBRID TOMATO SEEDS 10G': ProductInfo(name: 'HYBRID TOMATO SEEDS 10G', oldPrice: 90.00, currentStock: 55),
+  'HYBRID TOMATO SEEDS 50G': ProductInfo(name: 'HYBRID TOMATO SEEDS 50G', oldPrice: 380.00, currentStock: 30),
+  'HYBRID CHILLI SEEDS 10G': ProductInfo(name: 'HYBRID CHILLI SEEDS 10G', oldPrice: 100.00, currentStock: 65),
+  'HYBRID CHILLI SEEDS 25G': ProductInfo(name: 'HYBRID CHILLI SEEDS 25G', oldPrice: 240.00, currentStock: 45),
+  'HYBRID MAIZE SEEDS 1 KGS': ProductInfo(name: 'HYBRID MAIZE SEEDS 1 KGS', oldPrice: 190.00, currentStock: 80),
+  'HYBRID MAIZE SEEDS 5 KGS': ProductInfo(name: 'HYBRID MAIZE SEEDS 5 KGS', oldPrice: 900.00, currentStock: 40),
+  'HYBRID PADDY SEEDS 5 KGS': ProductInfo(name: 'HYBRID PADDY SEEDS 5 KGS', oldPrice: 330.00, currentStock: 110),
+  'HYBRID PADDY SEEDS 26 KGS': ProductInfo(name: 'HYBRID PADDY SEEDS 26 KGS', oldPrice: 1620.00, currentStock: 20),
+  'HYBRID ONION SEEDS 100G': ProductInfo(name: 'HYBRID ONION SEEDS 100G', oldPrice: 450.00, currentStock: 35),
+  'HYBRID ONION SEEDS 500G': ProductInfo(name: 'HYBRID ONION SEEDS 500G', oldPrice: 2100.00, currentStock: 12),
+  'UREA 50 KGS': ProductInfo(name: 'UREA 50 KGS', oldPrice: 650.00, currentStock: 200),
+  'DAP 50 KGS': ProductInfo(name: 'DAP 50 KGS', oldPrice: 1200.00, currentStock: 150),
+  'NPK 19-19-19 5 KGS': ProductInfo(name: 'NPK 19-19-19 5 KGS', oldPrice: 580.00, currentStock: 90),
+  'MANCOZEB 75% WP 1 KGS': ProductInfo(name: 'MANCOZEB 75% WP 1 KGS', oldPrice: 320.00, currentStock: 55),
+  'IMIDACLOPRID 17.8% SL 1 LTR': ProductInfo(name: 'IMIDACLOPRID 17.8% SL 1 LTR', oldPrice: 480.00, currentStock: 40),
+};
+
+// ── Supplier Names ─────────────────────────────────────────────────────────
+class _SupplierNames {
   static const List<String> all = [
     'AACHI AGRO TRADERS','AADHI FARM DISTRIBUTORS','ABINAYA SEEDS AND FERTILIZERS',
     'AGRI FRESH SUPPLIERS','AGRI GOLD TRADERS PVT LTD','AGRO BHARAT DISTRIBUTORS',
@@ -63,7 +103,6 @@ class SupplierNames {
     'VELMURUGAN FARM ENTERPRISE','VIJAY AGRO DISTRIBUTORS','VIJAYALAKSHMI AGRO CENTER',
     'VINAYAGA AGRO TRADERS','YUVAN FARM ENTERPRISE','ZONAL AGRO SUPPLIERS',
   ];
-
   static List<String> search(String query) {
     if (query.trim().isEmpty) return [];
     final q = query.toUpperCase().trim();
@@ -72,7 +111,7 @@ class SupplierNames {
 }
 
 // ── Agro Product Catalogue ─────────────────────────────────────────────────
-class AgroProducts {
+class _AgroProducts {
   static const List<String> all = [
     'AACHI HYBRID TOMATO SEEDS 10G','AADHI PADDY SEEDS 5 KGS','AADHI PADDY SEEDS 10 KGS',
     'AARTHY HYBRID CHILLI SEEDS 10G','AARTHY HYBRID CHILLI SEEDS 25G',
@@ -168,7 +207,6 @@ class AgroProducts {
     'SINGLE SUPER PHOSPHATE 25 KGS','SINGLE SUPER PHOSPHATE 50 KGS',
     'TRIPLE SUPER PHOSPHATE 25 KGS','TRIPLE SUPER PHOSPHATE 50 KGS',
   ];
-
   static List<String> search(String query) {
     if (query.trim().isEmpty) return [];
     final q = query.toUpperCase().trim();
@@ -177,23 +215,25 @@ class AgroProducts {
 }
 
 // ── Enums ──────────────────────────────────────────────────────────────────
-enum TaxType    { inclusive, exclusive }
-enum OrderType  { wholesaleBB, retailBC, wholesaleBC }
-enum GstType    { cgstSgst, igst }
-enum TcsType    { noTcs, tcs01, tcs1 }
+enum _TaxType    { inclusive, exclusive }
+enum _PurchaseType { purchase, purchaseReturn }
+enum _GstType    { cgstSgst, igst }
+enum _TcsType    { noTcs, tcs01, tcs1 }
 
 // ── Data model ─────────────────────────────────────────────────────────────
-class OrderItem {
-  String  product;
-  double  price;
-  int     quantity;
-  double  discountValue;
-  bool    discountIsPercent;
-  double  taxRate;
-  TaxType taxType;
+class _PurchaseItem {
+  String    product;
+  String    batch;
+  double    price;
+  int       quantity;
+  double    discountValue;
+  bool      discountIsPercent;
+  double    taxRate;
+  _TaxType  taxType;
 
-  OrderItem({
+  _PurchaseItem({
     required this.product,
+    this.batch = '',
     required this.price,
     required this.quantity,
     this.discountValue     = 0,
@@ -208,36 +248,36 @@ class OrderItem {
       : discountValue;
   double get afterDiscount  => subtotal - discountAmount;
   double get taxAmount {
-    if (taxType == TaxType.inclusive) {
+    if (taxType == _TaxType.inclusive) {
       return afterDiscount - afterDiscount / (1 + taxRate / 100);
     }
     return afterDiscount * taxRate / 100;
   }
   double get grandTotal =>
-      afterDiscount + (taxType == TaxType.exclusive ? taxAmount : 0);
+      afterDiscount + (taxType == _TaxType.exclusive ? taxAmount : 0);
 }
 
-// ── Saved Order model ──────────────────────────────────────────────────────
-class SavedOrder {
-  final String          id;
-  final String          supplierName;
-  final String          supplierAddress;
-  final String          reference;
-  final DateTime        date;
-  final List<OrderItem> items;
-  final OrderType       orderType;
-  final GstType         gstType;
-  final TaxType         globalTaxType;
-  final TcsType         tcsType;
+// ── Saved Purchase model ────────────────────────────────────────────────────
+class _SavedPurchase {
+  final String              id;
+  final String              supplierName;
+  final String              supplierAddress;
+  final String              reference;
+  final DateTime            date;
+  final List<_PurchaseItem> items;
+  final _PurchaseType       purchaseType;
+  final _GstType            gstType;
+  final _TaxType            globalTaxType;
+  final _TcsType            tcsType;
 
-  SavedOrder({
+  _SavedPurchase({
     required this.id,
     required this.supplierName,
     required this.supplierAddress,
     required this.reference,
     required this.date,
     required this.items,
-    required this.orderType,
+    required this.purchaseType,
     required this.gstType,
     required this.globalTaxType,
     required this.tcsType,
@@ -249,151 +289,14 @@ class SavedOrder {
   double get grandTotal => items.fold(0, (s, i) => s + i.grandTotal);
 }
 
-// ── Collapsible Card Widget ────────────────────────────────────────────────
-// initiallyExpanded: true  → starts OPEN  (up arrow shown)
-// initiallyExpanded: false → starts CLOSED (down arrow shown)
-class _CollapsibleCard extends StatefulWidget {
-  final IconData icon;
-  final String   title;
-  final Widget   child;
-  final bool     initiallyExpanded; // ← NEW PARAM
-
-  const _CollapsibleCard({
-    required this.icon,
-    required this.title,
-    required this.child,
-    this.initiallyExpanded = true, // default OPEN
-  });
-
-  @override
-  State<_CollapsibleCard> createState() => _CollapsibleCardState();
-}
-
-class _CollapsibleCardState extends State<_CollapsibleCard>
-    with SingleTickerProviderStateMixin {
-
-  late bool _expanded;
-
-  late AnimationController _ctrl;
-  late Animation<double>   _sizeFactor;
-  late Animation<double>   _arrowTurns;
-
-  @override
-  void initState() {
-    super.initState();
-    _expanded = widget.initiallyExpanded;
-
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 280),
-      // Start at 1.0 if expanded, 0.0 if closed
-      value: _expanded ? 1.0 : 0.0,
-    );
-    _sizeFactor = CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut);
-    // arrow: 0 turns (down/closed) → 0.5 turns (up/open)
-    _arrowTurns = Tween<double>(begin: 0.0, end: 0.5)
-        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  void _toggle() {
-    setState(() => _expanded = !_expanded);
-    _expanded ? _ctrl.forward() : _ctrl.reverse();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: _C.surface,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // ── Always-visible header ──────────────────────────────────
-          InkWell(
-            onTap: _toggle,
-            borderRadius: BorderRadius.circular(20),
-            child: Padding(
-              padding: const EdgeInsets.all(18),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: _C.primaryLt,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(widget.icon, color: _C.primary, size: 18),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      widget.title,
-                      style: const TextStyle(
-                        color: _C.textDark,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  // Rotating arrow — up when open, down when closed
-                  RotationTransition(
-                    turns: _arrowTurns,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: _C.primaryLt,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.keyboard_arrow_down_rounded,
-                        color: _C.primary,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          // ── Animated body ──────────────────────────────────────────
-          SizeTransition(
-            sizeFactor: _sizeFactor,
-            axisAlignment: -1,
-            child: Column(
-              children: [
-                Divider(height: 1, color: _C.border.withOpacity(0.7)),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
-                  child: widget.child,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+// ── Section keys ──────────────────────────────────────────────────────────
+const _kOrderTypes = 'Order Types';
+const _kSupplier   = 'Supplier Details';
+const _kDateRef    = 'Date & Reference';
 
 // ── Main Screen ────────────────────────────────────────────────────────────
 class PurchaseOrderScreen extends StatefulWidget {
-  final VoidCallback? onBack;
-  const PurchaseOrderScreen({super.key, this.onBack});
+  const PurchaseOrderScreen({super.key});
   @override
   State<PurchaseOrderScreen> createState() => _PurchaseOrderScreenState();
 }
@@ -401,24 +304,24 @@ class PurchaseOrderScreen extends StatefulWidget {
 class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
     with TickerProviderStateMixin {
 
-  bool _showViewOrders = false;
+  bool    _showViewOrders = false;
+  String? _openSection    = _kOrderTypes;
 
   final _supplierNameCtrl    = TextEditingController();
   final _supplierAddressCtrl = TextEditingController();
   final _referenceCtrl       = TextEditingController();
+  final _supplierFocus       = FocusNode();
 
-  OrderType _orderType     = OrderType.wholesaleBB;
-  GstType   _gstType       = GstType.cgstSgst;
-  TaxType   _globalTaxType = TaxType.exclusive;
-  TcsType   _tcsType       = TcsType.noTcs;
+  _PurchaseType _purchaseType  = _PurchaseType.purchase;
+  _GstType      _gstType       = _GstType.cgstSgst;
+  _TaxType      _globalTaxType = _TaxType.exclusive;
+  _TcsType      _tcsType       = _TcsType.noTcs;
 
-  DateTime        _selectedDate        = DateTime.now();
-  List<OrderItem> _items               = [];
-  int?            _selectedIndex;
-  List<String>    _supplierSuggestions = [];
-  final _supplierFocus = FocusNode();
-
-  final List<SavedOrder> _savedOrders = [];
+  DateTime              _selectedDate        = DateTime.now();
+  List<_PurchaseItem>   _items               = [];
+  int?                  _selectedIndex;
+  List<String>          _supplierSuggestions = [];
+  final List<_SavedPurchase> _savedOrders    = [];
 
   @override
   void dispose() {
@@ -429,10 +332,17 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
     super.dispose();
   }
 
+  void _toggleSection(String key) {
+    HapticFeedback.lightImpact();
+    setState(() => _openSection = _openSection == key ? null : key);
+  }
+
   double get _subTotal   => _items.fold(0, (s, i) => s + i.subtotal);
   double get _discTotal  => _items.fold(0, (s, i) => s + i.discountAmount);
   double get _taxTotal   => _items.fold(0, (s, i) => s + i.taxAmount);
   double get _grandTotal => _items.fold(0, (s, i) => s + i.grandTotal);
+
+  get _transferType => null;
 
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
@@ -452,8 +362,10 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
     if (picked != null) setState(() => _selectedDate = picked);
   }
 
-  void _showItemDialog({OrderItem? existing, int? editIndex}) {
+  // ── Add / Edit Item bottom sheet ───────────────────────────────────────
+  void _showItemSheet({_PurchaseItem? existing, int? editIndex}) {
     final productCtrl = TextEditingController(text: existing?.product ?? '');
+    final batchCtrl   = TextEditingController(text: existing?.batch   ?? '');
     final priceCtrl   = TextEditingController(
         text: existing != null ? existing.price.toStringAsFixed(2) : '');
     final qtyCtrl     = TextEditingController(
@@ -464,10 +376,11 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
     final taxCtrl     = TextEditingController(
         text: existing != null ? existing.taxRate.toStringAsFixed(0) : '');
 
-    TaxType      selectedTaxType = existing?.taxType ?? _globalTaxType;
-    bool         discIsPercent   = existing?.discountIsPercent ?? true;
-    double       previewTotal    = existing?.grandTotal ?? 0;
-    List<String> suggestions     = [];
+    _TaxType     selTaxType    = existing?.taxType ?? _globalTaxType;
+    bool         discIsPercent = existing?.discountIsPercent ?? true;
+    double       previewTotal  = existing?.grandTotal ?? 0;
+    List<String> suggestions   = [];
+    ProductInfo? selProduct    = existing != null ? _productDatabase[existing.product] : null;
 
     void recalc(StateSetter ss) {
       final p     = double.tryParse(priceCtrl.text) ?? 0;
@@ -477,518 +390,544 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
       final sub   = p * q;
       final disc  = discIsPercent ? sub * dv / 100 : dv;
       final after = sub - disc;
-      final total = selectedTaxType == TaxType.inclusive
-          ? after
-          : after + after * t / 100;
+      final total = selTaxType == _TaxType.inclusive
+          ? after : after + after * t / 100;
       ss(() => previewTotal = total);
     }
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      barrierColor: Colors.black54,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (_) => StatefulBuilder(builder: (ctx, ss) {
-        return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-          child: SingleChildScrollView(
-            child: Container(
-              decoration: BoxDecoration(
-                color: _C.surface,
-                borderRadius: BorderRadius.circular(28),
-                boxShadow: [
-                  BoxShadow(
-                    color: _C.primary.withOpacity(0.15),
-                    blurRadius: 40, offset: const Offset(0, 16),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // ── Dialog Header ──────────────────────────────────
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [_C.primary, _C.primaryDk],
-                        begin: Alignment.topLeft, end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(28),
-                        topRight: Radius.circular(28),
-                      ),
+        return DraggableScrollableSheet(
+          initialChildSize: 0.75,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (_, scrollCtrl) => Container(
+            decoration: const BoxDecoration(
+              color: _C.surface,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            ),
+            child: Column(
+              children: [
+                // ── Green header ──────────────────────────────────────
+                Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [_C.primary, _C.primaryDk],
+                      begin: Alignment.topLeft, end: Alignment.bottomRight,
                     ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.shopping_bag_rounded,
-                            color: Colors.white, size: 22),
-                        const SizedBox(width: 10),
-                        Text(editIndex != null ? 'Edit Item' : 'Add Item',
-                            style: const TextStyle(
-                                color: Colors.white, fontSize: 17,
-                                fontWeight: FontWeight.w700)),
-                      ],
-                    ),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
                   ),
-                  Padding(
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 10),
+                      Container(
+                        width: 40, height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.4),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.shopping_bag_rounded,
+                                color: Colors.white, size: 22),
+                            const SizedBox(width: 10),
+                            Text(
+                              editIndex != null ? 'Edit Item' : 'Add Item',
+                              style: const TextStyle(
+                                  color: Colors.white, fontSize: 17,
+                                  fontWeight: FontWeight.w700),
+                            ),
+                            const Spacer(),
+                            GestureDetector(
+                              onTap: () => Navigator.pop(ctx),
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(Icons.close_rounded,
+                                    color: Colors.white, size: 18),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // ── Scrollable form ───────────────────────────────
+                Expanded(
+                  child: ListView(
+                    controller: scrollCtrl,
                     padding: const EdgeInsets.all(20),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // ── Product search ─────────────────────────────
-                        const Text('Goods & Services Description',
-                            style: TextStyle(
-                                color: _C.textMid, fontSize: 12,
-                                fontWeight: FontWeight.w600)),
-                        const SizedBox(height: 6),
-                        TextField(
-                          controller: productCtrl,
-                          textCapitalization: TextCapitalization.characters,
-                          style: const TextStyle(
-                              color: _C.textDark, fontSize: 14,
-                              fontWeight: FontWeight.w500),
-                          onChanged: (val) {
-                            ss(() => suggestions = AgroProducts.search(val));
-                            recalc(ss);
-                          },
-                          decoration: InputDecoration(
-                            prefixIcon: const Icon(Icons.inventory_2_rounded,
-                                color: _C.primary, size: 18),
-                            suffixIcon: productCtrl.text.isNotEmpty
-                                ? IconButton(
-                              icon: const Icon(Icons.clear,
-                                  color: _C.textLight, size: 18),
-                              onPressed: () {
-                                productCtrl.clear();
-                                ss(() => suggestions = []);
+                    children: [
+
+                      // ── Product search ────────────────────────────
+                      const Text('Goods & Services Description',
+                          style: TextStyle(color: _C.textMid, fontSize: 12,
+                              fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: productCtrl,
+                        textCapitalization: TextCapitalization.characters,
+                        style: const TextStyle(color: _C.textDark,
+                            fontSize: 14, fontWeight: FontWeight.w500),
+                        onChanged: (val) {
+                          ss(() {
+                            suggestions = _AgroProducts.search(val);
+                            selProduct  = null;
+                          });
+                          recalc(ss);
+                        },
+                        decoration: InputDecoration(
+                          hintText: 'Type to search product…',
+                          hintStyle: const TextStyle(
+                              color: _C.textLight, fontSize: 12),
+                          filled: true, fillColor: _C.bg,
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 12),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: _C.border)),
+                          enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: _C.border)),
+                          focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                  color: _C.primary, width: 1.5)),
+                        ),
+                      ),
+
+                      // ── Suggestions dropdown ──────────────────────
+                      if (suggestions.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          constraints: const BoxConstraints(maxHeight: 200),
+                          decoration: BoxDecoration(
+                            color: _C.primaryLt,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                                color: _C.primary.withOpacity(0.3), width: 1.2),
+                            boxShadow: [
+                              BoxShadow(
+                                  color: _C.primary.withOpacity(0.12),
+                                  blurRadius: 20, offset: const Offset(0, 6)),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: ListView.separated(
+                              shrinkWrap: true,
+                              padding: EdgeInsets.zero,
+                              itemCount: suggestions.length,
+                              separatorBuilder: (_, __) =>
+                              const Divider(height: 1, color: _C.border),
+                              itemBuilder: (_, i) {
+                                final s     = suggestions[i];
+                                final query = productCtrl.text.toUpperCase().trim();
+                                final idx   = s.indexOf(query);
+                                return InkWell(
+                                  onTap: () {
+                                    productCtrl.text = s;
+                                    productCtrl.selection =
+                                        TextSelection.fromPosition(
+                                            TextPosition(offset: s.length));
+                                    ss(() {
+                                      suggestions = [];
+                                      selProduct  = _productDatabase[s];
+                                    });
+                                    recalc(ss);
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 14, vertical: 10),
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.eco_rounded,
+                                            color: _C.primary, size: 14),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: idx >= 0 && query.isNotEmpty
+                                              ? RichText(
+                                            text: TextSpan(children: [
+                                              TextSpan(
+                                                text: s.substring(0, idx),
+                                                style: const TextStyle(
+                                                    color: _C.primaryDk,
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.w500),
+                                              ),
+                                              TextSpan(
+                                                text: s.substring(idx, idx + query.length),
+                                                style: const TextStyle(
+                                                    color: _C.primary,
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.w800,
+                                                    backgroundColor: Color(0xFFBEEDD1)),
+                                              ),
+                                              TextSpan(
+                                                text: s.substring(idx + query.length),
+                                                style: const TextStyle(
+                                                    color: _C.primaryDk,
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.w500),
+                                              ),
+                                            ]),
+                                          )
+                                              : Text(s,
+                                              style: const TextStyle(
+                                                  color: _C.primaryDk,
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w500)),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
                               },
-                            )
-                                : null,
-                            hintText: 'Type to search product…',
-                            hintStyle: const TextStyle(
-                                color: _C.textLight, fontSize: 12),
-                            filled: true, fillColor: _C.bg,
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 12),
-                            border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: _C.border)),
-                            enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: _C.border)),
-                            focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(
-                                    color: _C.primary, width: 1.5)),
+                            ),
                           ),
                         ),
-                        if (suggestions.isNotEmpty) ...[
-                          const SizedBox(height: 4),
-                          Container(
-                            constraints: const BoxConstraints(maxHeight: 160),
-                            decoration: BoxDecoration(
-                              color: _C.surface,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                  color: _C.primary.withOpacity(0.25)),
-                              boxShadow: [
-                                BoxShadow(
-                                    color: _C.primary.withOpacity(0.08),
-                                    blurRadius: 16,
-                                    offset: const Offset(0, 4)),
+                      ],
+                      const SizedBox(height: 14),
+
+                      // ── Batch No ──────────────────────────────────
+                      _PDialogField(
+                        label: 'Batch No',
+                        controller: batchCtrl,
+                        keyboardType: TextInputType.text,
+                      ),
+                      const SizedBox(height: 14),
+
+                      // ── Price & Qty with Old price / Stock badges ─
+                      Row(
+                        children: [
+                          // Price
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    const Text('Price (₹)',
+                                        style: TextStyle(color: _C.textMid,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600)),
+                                    if (selProduct != null) ...[
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 7, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFFFF3CD),
+                                          borderRadius: BorderRadius.circular(6),
+                                          border: Border.all(
+                                              color: _C.gold.withOpacity(0.5)),
+                                        ),
+                                        child: Text(
+                                          'Old: ₹${selProduct!.oldPrice.toStringAsFixed(0)}',
+                                          style: const TextStyle(
+                                              color: _C.gold, fontSize: 10,
+                                              fontWeight: FontWeight.w700),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                TextField(
+                                  controller: priceCtrl,
+                                  keyboardType: TextInputType.number,
+                                  onChanged: (_) => recalc(ss),
+                                  style: const TextStyle(color: _C.textDark,
+                                      fontSize: 14, fontWeight: FontWeight.w500),
+                                  decoration: InputDecoration(
+                                    filled: true, fillColor: _C.bg,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 12),
+                                    border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: const BorderSide(color: _C.border)),
+                                    enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: const BorderSide(color: _C.border)),
+                                    focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: const BorderSide(
+                                            color: _C.primary, width: 1.5)),
+                                  ),
+                                ),
                               ],
                             ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(14),
-                              child: ListView.separated(
-                                shrinkWrap: true,
-                                padding: EdgeInsets.zero,
-                                itemCount: suggestions.length,
-                                separatorBuilder: (_, __) =>
-                                const Divider(height: 1, color: _C.border),
-                                itemBuilder: (_, i) {
-                                  final s     = suggestions[i];
-                                  final query =
-                                  productCtrl.text.toUpperCase().trim();
-                                  final idx   = s.indexOf(query);
-                                  return InkWell(
-                                    onTap: () {
-                                      productCtrl.text = s;
-                                      productCtrl.selection =
-                                          TextSelection.fromPosition(
-                                              TextPosition(offset: s.length));
-                                      ss(() => suggestions = []);
-                                      recalc(ss);
-                                    },
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 14, vertical: 10),
-                                      child: Row(
-                                        children: [
-                                          const Icon(Icons.eco_rounded,
-                                              color: _C.primary, size: 14),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: idx >= 0 && query.isNotEmpty
-                                                ? RichText(
-                                              text: TextSpan(children: [
-                                                TextSpan(
-                                                  text: s.substring(0, idx),
-                                                  style: const TextStyle(
-                                                      color: _C.textMid,
-                                                      fontSize: 13,
-                                                      fontWeight: FontWeight.w500),
-                                                ),
-                                                TextSpan(
-                                                  text: s.substring(idx, idx + query.length),
-                                                  style: const TextStyle(
-                                                      color: _C.primary,
-                                                      fontSize: 13,
-                                                      fontWeight: FontWeight.w800,
-                                                      backgroundColor: Color(0xFFE8F5ED)),
-                                                ),
-                                                TextSpan(
-                                                  text: s.substring(idx + query.length),
-                                                  style: const TextStyle(
-                                                      color: _C.textMid,
-                                                      fontSize: 13,
-                                                      fontWeight: FontWeight.w500),
-                                                ),
-                                              ]),
-                                            )
-                                                : Text(s,
-                                                style: const TextStyle(
-                                                    color: _C.textDark,
-                                                    fontSize: 13,
-                                                    fontWeight: FontWeight.w500)),
-                                          ),
-                                        ],
+                          ),
+                          const SizedBox(width: 12),
+                          // Quantity
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    const Text('Quantity',
+                                        style: TextStyle(color: _C.textMid,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600)),
+                                    if (selProduct != null) ...[
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 7, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: _C.primaryLt,
+                                          borderRadius: BorderRadius.circular(6),
+                                          border: Border.all(
+                                              color: _C.primary.withOpacity(0.35)),
+                                        ),
+                                        child: Text(
+                                          'Stock: ${selProduct!.currentStock}',
+                                          style: const TextStyle(
+                                              color: _C.primary, fontSize: 10,
+                                              fontWeight: FontWeight.w700),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                TextField(
+                                  controller: qtyCtrl,
+                                  keyboardType: TextInputType.number,
+                                  onChanged: (_) => recalc(ss),
+                                  style: const TextStyle(color: _C.textDark,
+                                      fontSize: 14, fontWeight: FontWeight.w500),
+                                  decoration: InputDecoration(
+                                    filled: true, fillColor: _C.bg,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 12),
+                                    border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: const BorderSide(color: _C.border)),
+                                    enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: const BorderSide(color: _C.border)),
+                                    focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: const BorderSide(
+                                            color: _C.primary, width: 1.5)),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+
+                      // ── Discount & Tax on same row ─────────────────
+                      Row(
+                        children: [
+                          // ── Discount column ────────────────────────
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Discount',
+                                    style: TextStyle(color: _C.textMid, fontSize: 12,
+                                        fontWeight: FontWeight.w600)),
+                                const SizedBox(height: 6),
+                                Row(
+                                  children: [
+                                    Container(
+                                      height: 46,
+                                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                                      decoration: BoxDecoration(
+                                        color: _C.bg,
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(color: _C.border),
+                                      ),
+                                      child: DropdownButtonHideUnderline(
+                                        child: DropdownButton<bool>(
+                                          value: discIsPercent,
+                                          dropdownColor: _C.surface,
+                                          icon: const Icon(
+                                              Icons.keyboard_arrow_down_rounded,
+                                              color: _C.primary, size: 16),
+                                          items: const [
+                                            DropdownMenuItem(value: true,
+                                              child: Text('%', style: TextStyle(
+                                                  color: _C.primary,
+                                                  fontWeight: FontWeight.w800,
+                                                  fontSize: 15)),
+                                            ),
+                                            DropdownMenuItem(value: false,
+                                              child: Text('₹', style: TextStyle(
+                                                  color: _C.primary,
+                                                  fontWeight: FontWeight.w800,
+                                                  fontSize: 15)),
+                                            ),
+                                          ],
+                                          onChanged: (val) {
+                                            if (val != null) {
+                                              ss(() => discIsPercent = val);
+                                              recalc(ss);
+                                            }
+                                          },
+                                        ),
                                       ),
                                     ),
-                                  );
-                                },
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: TextField(
+                                        controller: discCtrl,
+                                        keyboardType: TextInputType.number,
+                                        onChanged: (_) => recalc(ss),
+                                        style: const TextStyle(color: _C.textDark,
+                                            fontSize: 14, fontWeight: FontWeight.w500),
+                                        decoration: InputDecoration(
+                                          hintText: discIsPercent ? '0.00' : '0.00',
+                                          hintStyle: const TextStyle(
+                                              color: _C.textLight, fontSize: 12),
+                                          filled: true, fillColor: _C.bg,
+                                          contentPadding: const EdgeInsets.symmetric(
+                                              horizontal: 12, vertical: 12),
+                                          border: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(12),
+                                              borderSide: const BorderSide(color: _C.border)),
+                                          enabledBorder: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(12),
+                                              borderSide: const BorderSide(color: _C.border)),
+                                          focusedBorder: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(12),
+                                              borderSide: const BorderSide(
+                                                  color: _C.primary, width: 1.5)),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          // ── Tax column ────────────────────────────
+                          Expanded(
+                            child: _PDialogField(
+                              label: 'Tax (%)',
+                              controller: taxCtrl,
+                              keyboardType: TextInputType.number,
+                              onChanged: (_) => recalc(ss),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+
+                      // ── Item Total preview ────────────────────────
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: _C.primaryLt,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                              color: _C.primary.withOpacity(0.2)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('Item Total',
+                                style: TextStyle(color: _C.primary,
+                                    fontWeight: FontWeight.w600, fontSize: 14)),
+                            Text('₹${previewTotal.toStringAsFixed(2)}',
+                                style: const TextStyle(color: _C.primary,
+                                    fontWeight: FontWeight.w800, fontSize: 18)),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // ── Cancel / Add buttons ──────────────────────
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => Navigator.pop(ctx),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                side: const BorderSide(color: _C.border),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14)),
+                              ),
+                              child: const Text('Cancel',
+                                  style: TextStyle(color: _C.textMid,
+                                      fontWeight: FontWeight.w600)),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            flex: 2,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                if (productCtrl.text.trim().isEmpty) return;
+                                final item = _PurchaseItem(
+                                  product:           productCtrl.text.trim(),
+                                  batch:             batchCtrl.text.trim(),
+                                  price:             double.tryParse(priceCtrl.text) ?? 0,
+                                  quantity:          int.tryParse(qtyCtrl.text) ?? 1,
+                                  discountValue:     double.tryParse(discCtrl.text) ?? 0,
+                                  discountIsPercent: discIsPercent,
+                                  taxRate:           double.tryParse(taxCtrl.text) ?? 0,
+                                  taxType:           selTaxType,
+                                );
+                                setState(() {
+                                  if (editIndex != null) {
+                                    _items[editIndex] = item;
+                                  } else {
+                                    _items.add(item);
+                                  }
+                                  _selectedIndex = null;
+                                });
+                                Navigator.pop(ctx);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _C.primary,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14)),
+                              ),
+                              child: Text(
+                                editIndex != null ? 'Update' : 'Add Item',
+                                style: const TextStyle(color: Colors.white,
+                                    fontWeight: FontWeight.w700, fontSize: 15),
                               ),
                             ),
                           ),
                         ],
-                        const SizedBox(height: 14),
-                        // ── Price & Qty ────────────────────────────────
-                        Row(
-                          children: [
-                            Expanded(child: _DialogField(
-                              label: 'Price (₹)', controller: priceCtrl,
-                              icon: Icons.currency_rupee_rounded,
-                              keyboardType: TextInputType.number,
-                              onChanged: (_) => recalc(ss),
-                            )),
-                            const SizedBox(width: 12),
-                            Expanded(child: _DialogField(
-                              label: 'Quantity', controller: qtyCtrl,
-                              icon: Icons.layers_rounded,
-                              keyboardType: TextInputType.number,
-                              onChanged: (_) => recalc(ss),
-                            )),
-                          ],
-                        ),
-                        const SizedBox(height: 14),
-                        // ── Discount ───────────────────────────────────
-                        const Text('Discount',
-                            style: TextStyle(
-                                color: _C.textMid, fontSize: 12,
-                                fontWeight: FontWeight.w600)),
-                        const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            Container(
-                              height: 46,
-                              padding: const EdgeInsets.symmetric(horizontal: 6),
-                              decoration: BoxDecoration(
-                                color: _C.bg,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: _C.border),
-                              ),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<bool>(
-                                  value: discIsPercent,
-                                  dropdownColor: _C.surface,
-                                  icon: const Icon(
-                                      Icons.keyboard_arrow_down_rounded,
-                                      color: _C.primary, size: 16),
-                                  items: const [
-                                    DropdownMenuItem(
-                                      value: true,
-                                      child: Text('%', style: TextStyle(
-                                          color: _C.primary,
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 15)),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: false,
-                                      child: Text('₹', style: TextStyle(
-                                          color: _C.primary,
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 15)),
-                                    ),
-                                  ],
-                                  onChanged: (val) {
-                                    if (val != null) {
-                                      ss(() => discIsPercent = val);
-                                      recalc(ss);
-                                    }
-                                  },
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Flexible(
-                              child: TextField(
-                                controller: discCtrl,
-                                keyboardType: TextInputType.number,
-                                onChanged: (_) => recalc(ss),
-                                style: const TextStyle(
-                                    color: _C.textDark, fontSize: 14,
-                                    fontWeight: FontWeight.w500),
-                                decoration: InputDecoration(
-                                  hintText: discIsPercent ? '0.00 %' : '0.00 ₹',
-                                  hintStyle: const TextStyle(
-                                      color: _C.textLight, fontSize: 12),
-                                  filled: true, fillColor: _C.bg,
-                                  contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 12),
-                                  border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: const BorderSide(color: _C.border)),
-                                  enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: const BorderSide(color: _C.border)),
-                                  focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: const BorderSide(
-                                          color: _C.primary, width: 1.5)),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 14),
-                        // ── Tax % + Tax Type ───────────────────────────
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Expanded(child: _DialogField(
-                              label: 'Tax (%)', controller: taxCtrl,
-                              icon: Icons.percent_rounded,
-                              keyboardType: TextInputType.number,
-                              onChanged: (_) => recalc(ss),
-                            )),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text('Tax Type',
-                                      style: TextStyle(
-                                          color: _C.textMid, fontSize: 12,
-                                          fontWeight: FontWeight.w600)),
-                                  const SizedBox(height: 6),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 12, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: _C.bg,
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: _C.border),
-                                    ),
-                                    child: DropdownButtonHideUnderline(
-                                      child: DropdownButton<TaxType>(
-                                        value: selectedTaxType,
-                                        isExpanded: true,
-                                        icon: const Icon(
-                                            Icons.keyboard_arrow_down_rounded,
-                                            color: _C.primary, size: 20),
-                                        dropdownColor: _C.surface,
-                                        style: const TextStyle(
-                                            color: _C.textDark,
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w600),
-                                        items: const [
-                                          DropdownMenuItem(
-                                            value: TaxType.exclusive,
-                                            child: Text('Exclusive',
-                                                style: TextStyle(fontSize: 13)),
-                                          ),
-                                          DropdownMenuItem(
-                                            value: TaxType.inclusive,
-                                            child: Text('Inclusive',
-                                                style: TextStyle(fontSize: 13)),
-                                          ),
-                                        ],
-                                        onChanged: (val) {
-                                          if (val != null) {
-                                            ss(() => selectedTaxType = val);
-                                            recalc(ss);
-                                          }
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: selectedTaxType == TaxType.inclusive
-                                ? const Color(0xFFEFF8F3)
-                                : const Color(0xFFFFF8EC),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: selectedTaxType == TaxType.inclusive
-                                  ? _C.primary.withOpacity(0.2)
-                                  : _C.gold.withOpacity(0.4),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(Icons.info_outline_rounded,
-                                  size: 13,
-                                  color: selectedTaxType == TaxType.inclusive
-                                      ? _C.primary : _C.gold),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  selectedTaxType == TaxType.inclusive
-                                      ? 'Tax is included in the entered price.'
-                                      : 'Tax is added on top of the entered price.',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: selectedTaxType == TaxType.inclusive
-                                        ? _C.primary : _C.gold,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        // ── Item Total preview ─────────────────────────
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: _C.primaryLt,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                                color: _C.primary.withOpacity(0.2)),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text('Item Total',
-                                  style: TextStyle(
-                                      color: _C.primary,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 14)),
-                              Text('₹${previewTotal.toStringAsFixed(2)}',
-                                  style: const TextStyle(
-                                      color: _C.primary,
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 18)),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                      SizedBox(
+                          height: MediaQuery.of(ctx).viewInsets.bottom + 16),
+                    ],
                   ),
-                  // ── Dialog Buttons ─────────────────────────────────
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => Navigator.pop(ctx),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              side: const BorderSide(color: _C.border),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14)),
-                            ),
-                            child: const Text('Cancel',
-                                style: TextStyle(
-                                    color: _C.textMid,
-                                    fontWeight: FontWeight.w600)),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          flex: 2,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              if (productCtrl.text.trim().isEmpty) return;
-                              final item = OrderItem(
-                                product:           productCtrl.text.trim(),
-                                price:             double.tryParse(priceCtrl.text) ?? 0,
-                                quantity:          int.tryParse(qtyCtrl.text) ?? 1,
-                                discountValue:     double.tryParse(discCtrl.text) ?? 0,
-                                discountIsPercent: discIsPercent,
-                                taxRate:           double.tryParse(taxCtrl.text) ?? 0,
-                                taxType:           selectedTaxType,
-                              );
-                              setState(() {
-                                if (editIndex != null) {
-                                  _items[editIndex] = item;
-                                } else {
-                                  _items.add(item);
-                                }
-                                _selectedIndex = null;
-                              });
-                              Navigator.pop(ctx);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _C.primary,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14)),
-                            ),
-                            child: Text(
-                              editIndex != null ? 'Update' : 'Add Item',
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 15),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );
       }),
     );
-  }
-
-  void _deleteSelected() {
-    if (_selectedIndex == null) {
-      _showSnack('Select an item to delete', _C.red);
-      return;
-    }
-    setState(() {
-      _items.removeAt(_selectedIndex!);
-      _selectedIndex = null;
-    });
   }
 
   void _showSnack(String msg, Color color) {
@@ -1011,14 +950,14 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
     }
     HapticFeedback.mediumImpact();
 
-    final order = SavedOrder(
+    final order = _SavedPurchase(
       id:              'PO-${DateTime.now().millisecondsSinceEpoch}',
       supplierName:    _supplierNameCtrl.text.trim(),
       supplierAddress: _supplierAddressCtrl.text.trim(),
       reference:       _referenceCtrl.text.trim(),
       date:            _selectedDate,
       items:           List.from(_items),
-      orderType:       _orderType,
+      purchaseType:    _purchaseType,
       gstType:         _gstType,
       globalTaxType:   _globalTaxType,
       tcsType:         _tcsType,
@@ -1033,11 +972,12 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
       _selectedIndex       = null;
       _supplierSuggestions = [];
       _selectedDate        = DateTime.now();
-      _orderType           = OrderType.wholesaleBB;
-      _gstType             = GstType.cgstSgst;
-      _globalTaxType       = TaxType.exclusive;
-      _tcsType             = TcsType.noTcs;
+      _purchaseType        = _PurchaseType.purchase;
+      _gstType             = _GstType.cgstSgst;
+      _globalTaxType       = _TaxType.exclusive;
+      _tcsType             = _TcsType.noTcs;
       _showViewOrders      = true;
+      _openSection         = _kOrderTypes;
     });
 
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -1046,8 +986,7 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
           const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
           const SizedBox(width: 10),
           Flexible(
-            child: Text(
-                'Order saved! Total ₹${order.grandTotal.toStringAsFixed(2)}'),
+            child: Text('Order saved! Total ₹${order.grandTotal.toStringAsFixed(2)}'),
           ),
         ],
       ),
@@ -1057,6 +996,7 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
     ));
   }
 
+  // ──────────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1068,23 +1008,20 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
           Expanded(
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
-              layoutBuilder: (currentChild, previousChildren) => Stack(
+              layoutBuilder: (cur, prev) => Stack(
                 alignment: Alignment.topCenter,
-                children: [
-                  ...previousChildren,
-                  if (currentChild != null) currentChild,
-                ],
+                children: [...prev, if (cur != null) cur],
               ),
-              child: _showViewOrders
-                  ? _buildViewOrders()
-                  : _buildOrderForm(),
+              child: _showViewOrders ? _buildViewOrders() : _buildOrderForm(),
             ),
           ),
+          if (!_showViewOrders) _buildBottomBar(),
         ],
       ),
     );
   }
 
+  // ── Header ─────────────────────────────────────────────────────────────
   Widget _buildHeader() {
     return Container(
       decoration: const BoxDecoration(
@@ -1093,8 +1030,7 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
           begin: Alignment.topLeft, end: Alignment.bottomRight,
         ),
         boxShadow: [
-          BoxShadow(
-              color: Color(0x441B8A3E), blurRadius: 16, offset: Offset(0, 6)),
+          BoxShadow(color: Color(0x441B8A3E), blurRadius: 16, offset: Offset(0, 6)),
         ],
       ),
       child: SafeArea(
@@ -1109,45 +1045,34 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
                   IconButton(
                     icon: const Icon(Icons.arrow_back_ios_new_rounded,
                         color: Colors.white, size: 20),
-                    onPressed: () {
-                      if (Navigator.canPop(context)) {
-                        Navigator.pop(context);
-                      } else {
-                        widget.onBack?.call();
-                      }
-                    },
-                    constraints:
-                    const BoxConstraints(minWidth: 40, minHeight: 40),
+                    onPressed: () => Navigator.pop(context),
+                    constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
                     padding: const EdgeInsets.all(8),
                   ),
                   const Expanded(
                     child: Text('Purchase Order',
-                        style: TextStyle(
-                            color: Colors.white, fontSize: 19,
+                        style: TextStyle(color: Colors.white, fontSize: 19,
                             fontWeight: FontWeight.w800, letterSpacing: 0.3)),
                   ),
-
                 ],
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
+              padding: const EdgeInsets.fromLTRB(16, 2, 16, 10),
               child: Container(
-                height: 46,
+                height: 48,
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(
                   children: [
-                    _tab(
-                        label: 'New Order',
+                    _tab(label: 'New Order',
                         icon: Icons.add_circle_outline_rounded,
                         active: !_showViewOrders,
                         onTap: () => setState(() => _showViewOrders = false)),
-                    _tab(
-                        label: 'View Orders',
+                    _tab(label: 'View Orders',
                         icon: Icons.list_alt_rounded,
                         active: _showViewOrders,
                         onTap: () => setState(() => _showViewOrders = true)),
@@ -1162,10 +1087,8 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
   }
 
   Widget _tab({
-    required String label,
-    required IconData icon,
-    required bool active,
-    required VoidCallback onTap,
+    required String label, required IconData icon,
+    required bool active, required VoidCallback onTap,
   }) {
     return Expanded(
       child: GestureDetector(
@@ -1173,12 +1096,12 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 220),
           curve: Curves.easeInOut,
+          height: double.infinity,
           decoration: BoxDecoration(
             color: active ? Colors.white : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
             boxShadow: active
-                ? [BoxShadow(
-                color: Colors.black.withOpacity(0.10),
+                ? [BoxShadow(color: Colors.black.withOpacity(0.10),
                 blurRadius: 8, offset: const Offset(0, 2))]
                 : [],
           ),
@@ -1186,15 +1109,13 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(icon, size: 16,
-                  color: active
-                      ? _C.primary : Colors.white.withOpacity(0.75)),
+                  color: active ? _C.primary : Colors.white.withOpacity(0.75)),
               const SizedBox(width: 6),
               Text(label,
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                    color: active
-                        ? _C.primary : Colors.white.withOpacity(0.75),
+                    color: active ? _C.primary : Colors.white.withOpacity(0.75),
                   )),
             ],
           ),
@@ -1203,111 +1124,306 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // ORDER FORM
-  // Layout (top → bottom):
-  //   1. Order Types      — initiallyExpanded: FALSE (closed by default)
-  //   2. Supplier Details — initiallyExpanded: FALSE (closed by default)
-  //   3. Date & Reference — initiallyExpanded: FALSE (closed by default)
-  //   4. Add Item bar
-  //   5. Items list (if any)
-  //   6. Delete bar  (if items exist)
-  //   7. Summary card (if items exist)
-  //   8. Save button
-  // ─────────────────────────────────────────────────────────────────────────
+  // ── Order form ─────────────────────────────────────────────────────────
   Widget _buildOrderForm() {
-    double tcsAmount = 0;
-    if (_tcsType == TcsType.tcs01) tcsAmount = _grandTotal * 0.001;
-    if (_tcsType == TcsType.tcs1)  tcsAmount = _grandTotal * 0.01;
-    final netTotal = _grandTotal + tcsAmount;
-
     return SingleChildScrollView(
       key: const ValueKey('form'),
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       physics: const BouncingScrollPhysics(),
-      primary: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── 1. Order Types — CLOSED by default ──────────────────────
-          _CollapsibleCard(
-            icon: Icons.tune_rounded,
-            title: 'Order Types',
-            initiallyExpanded: false,   // ← CLOSED
-            child: _buildTypesBody(),
-          ),
+          _accordionCard(sectionKey: _kOrderTypes, icon: Icons.tune_rounded,
+              title: _kOrderTypes, child: _buildTypesBody()),
           const SizedBox(height: 14),
-
-          // ── 2. Supplier Details — CLOSED by default ─────────────────
-          _CollapsibleCard(
-            icon: Icons.store_rounded,
-            title: 'Supplier Details',
-            initiallyExpanded: false,   // ← CLOSED
-            child: _buildSupplierBody(),
-          ),
+          _accordionCard(sectionKey: _kSupplier, icon: Icons.store_rounded,
+              title: _kSupplier, child: _buildSupplierBody()),
           const SizedBox(height: 14),
-
-          // ── 3. Date & Reference — CLOSED by default ─────────────────
-          _CollapsibleCard(
-            icon: Icons.calendar_month_rounded,
-            title: 'Date & Reference',
-            initiallyExpanded: false,   // ← CLOSED
-            child: _buildDateRefBody(),
-          ),
+          _accordionCard(sectionKey: _kDateRef,
+              icon: Icons.calendar_month_rounded,
+              title: _kDateRef, child: _buildDateRefBody()),
           const SizedBox(height: 16),
-
-          // ── 4. Add Item bar ────────────────────────────────────────
-          _buildAddBar(),
-          const SizedBox(height: 12),
-
-          // ── 5–7. Items, Delete, Summary (only when items exist) ────
+          _accordionCard(
+            sectionKey: 'OrderItems',
+            icon: Icons.shopping_cart_rounded,
+            title: 'Order Items',
+            onHeaderTap: () => _showItemSheet(),
+            child: _items.isEmpty
+                ? Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Center(
+                child: Column(
+                  children: [
+                    Container(
+                      width: 70, height: 70,
+                      decoration: BoxDecoration(
+                          color: _C.primaryLt, shape: BoxShape.circle),
+                      child: const Icon(Icons.shopping_bag_outlined,
+                          color: _C.primary, size: 36),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text('No Items Added',
+                        style: TextStyle(color: _C.textDark, fontSize: 14,
+                            fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 4),
+                    const Text('Tap to add items to order',
+                        style: TextStyle(color: _C.textMid, fontSize: 12,
+                            fontWeight: FontWeight.w400)),
+                  ],
+                ),
+              ),
+            )
+                : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: _C.primaryLt,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text('${_items.length}',
+                            style: const TextStyle(color: _C.primary,
+                                fontSize: 11, fontWeight: FontWeight.w700)),
+                      ),
+                      const Spacer(),
+                      const Text('Tap header to add more',
+                          style: TextStyle(color: _C.textMid, fontSize: 11,
+                              fontWeight: FontWeight.w500)),
+                    ],
+                  ),
+                ),
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _items.length,
+                  separatorBuilder: (_, __) =>
+                      Divider(height: 1, color: _C.border),
+                  itemBuilder: (_, i) {
+                    final item     = _items[i];
+                    final selected = _selectedIndex == i;
+                    return GestureDetector(
+                      onTap: () => setState(
+                              () => _selectedIndex = selected ? null : i),
+                      onDoubleTap: () =>
+                          _showItemSheet(existing: item, editIndex: i),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        margin: const EdgeInsets.symmetric(vertical: 4),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: selected ? _C.primaryLt : _C.bg,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: selected
+                                ? _C.primary.withOpacity(0.4) : _C.border,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  width: 22, height: 22,
+                                  decoration: BoxDecoration(
+                                    color: selected
+                                        ? _C.primary
+                                        : _C.primary.withOpacity(0.12),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Center(
+                                    child: Text('${i + 1}',
+                                        style: TextStyle(
+                                            color: selected
+                                                ? Colors.white : _C.primary,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w800)),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(item.product,
+                                      style: const TextStyle(
+                                          color: _C.textDark, fontSize: 12,
+                                          fontWeight: FontWeight.w600),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis),
+                                ),
+                                const SizedBox(width: 8),
+                                Text('₹${item.grandTotal.toStringAsFixed(2)}',
+                                    style: const TextStyle(color: _C.primary,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w800)),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Wrap(
+                              spacing: 4, runSpacing: 3,
+                              children: [
+                                _PInfoChip(value: '₹${item.price.toStringAsFixed(0)}'),
+                                _PInfoChip(value: '× ${item.quantity}'),
+                                if (item.discountValue > 0)
+                                  _PInfoChip(
+                                    value: item.discountIsPercent
+                                        ? '${item.discountValue.toStringAsFixed(0)}% off'
+                                        : '₹${item.discountValue.toStringAsFixed(0)} off',
+                                    isHighlight: true,
+                                  ),
+                                _PInfoChip(
+                                    value: '${item.taxRate.toStringAsFixed(0)}% tax'),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
           if (_items.isNotEmpty) ...[
-            _buildItemsCards(),
-            const SizedBox(height: 12),
-            _buildDeleteBar(),
             const SizedBox(height: 12),
             _buildSummaryCard(),
             const SizedBox(height: 16),
           ],
-
-          // ── 8. Save button ─────────────────────────────────────────
-          _buildSaveButton(netTotal),
-          SizedBox(height: MediaQuery.of(context).padding.bottom + 24),
+          const SizedBox(height: 100),
         ],
       ),
     );
   }
 
-  // ── Order Types body ───────────────────────────────────────────────────
+  // ── Accordion card ─────────────────────────────────────────────────────
+  Widget _accordionCard({
+    required String   sectionKey,
+    required IconData icon,
+    required String   title,
+    required Widget   child,
+    VoidCallback?     onHeaderTap,
+  }) {
+    final isExpanded = _openSection == sectionKey;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      decoration: BoxDecoration(
+        color: _C.surface,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.06),
+              blurRadius: 16, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          InkWell(
+            onTap: () => onHeaderTap != null
+                ? onHeaderTap()
+                : _toggleSection(sectionKey),
+            borderRadius: BorderRadius.circular(20),
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: isExpanded ? _C.primary : _C.primaryLt,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(icon,
+                        color: isExpanded ? Colors.white : _C.primary, size: 18),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(title,
+                        style: const TextStyle(color: _C.textDark, fontSize: 15,
+                            fontWeight: FontWeight.w700)),
+                  ),
+                  if (onHeaderTap == null)
+                    AnimatedRotation(
+                      turns: isExpanded ? 0.5 : 0.0,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: _C.primaryLt,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.keyboard_arrow_down_rounded,
+                            color: _C.primary, size: 20),
+                      ),
+                    )
+                  else
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                          color: _C.primaryLt,
+                          borderRadius: BorderRadius.circular(8)),
+                      child: const Icon(Icons.add_rounded,
+                          color: _C.primary, size: 16),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          AnimatedCrossFade(
+            firstChild: const SizedBox(width: double.infinity, height: 0),
+            secondChild: Column(
+              children: [
+                Divider(height: 1, color: _C.border.withOpacity(0.7)),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+                  child: child,
+                ),
+              ],
+            ),
+            crossFadeState: isExpanded
+                ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 300),
+            sizeCurve: Curves.easeInOut,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Types body ─────────────────────────────────────────────────────────
   Widget _buildTypesBody() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Expanded(child: _TypeDropdown<OrderType>(
+            Expanded(child: _PTypeDropdown<_PurchaseType>(
               label: 'Types',
-              value: _orderType,
+              value: _purchaseType,
               items: const [
-                DropdownMenuItem(value: OrderType.wholesaleBB,
-                    child: Text('Wholesale B-B')),
-                DropdownMenuItem(value: OrderType.retailBC,
-                    child: Text('Retail B-C')),
-                DropdownMenuItem(value: OrderType.wholesaleBC,
-                    child: Text('Wholesale B-C')),
+                DropdownMenuItem(value: _PurchaseType.purchase,
+                    child: Text('Purchase')),
+                DropdownMenuItem(value: _PurchaseType.purchaseReturn,
+                    child: Text('Return')),
               ],
               onChanged: (v) {
-                if (v != null) setState(() => _orderType = v);
+                if (v != null) setState(() => _purchaseType = v);
               },
             )),
             const SizedBox(width: 12),
-            Expanded(child: _TypeDropdown<GstType>(
+            Expanded(child: _PTypeDropdown<_GstType>(
               label: 'GST Type',
               value: _gstType,
               items: const [
-                DropdownMenuItem(value: GstType.cgstSgst,
+                DropdownMenuItem(value: _GstType.cgstSgst,
                     child: Text('CGST/SGST')),
-                DropdownMenuItem(value: GstType.igst,
+                DropdownMenuItem(value: _GstType.igst,
                     child: Text('IGST')),
               ],
               onChanged: (v) {
@@ -1319,30 +1435,17 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
         const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(child: _TypeDropdown<TaxType>(
+            Expanded(child: _PTypeDropdown<_TaxType>(
               label: 'Tax Inclusion',
               value: _globalTaxType,
               items: const [
-                DropdownMenuItem(value: TaxType.exclusive,
+                DropdownMenuItem(value: _TaxType.exclusive,
                     child: Text('Exclude Tax')),
-                DropdownMenuItem(value: TaxType.inclusive,
+                DropdownMenuItem(value: _TaxType.inclusive,
                     child: Text('Include Tax')),
               ],
               onChanged: (v) {
                 if (v != null) setState(() => _globalTaxType = v);
-              },
-            )),
-            const SizedBox(width: 12),
-            Expanded(child: _TypeDropdown<TcsType>(
-              label: 'TCS',
-              value: _tcsType,
-              items: const [
-                DropdownMenuItem(value: TcsType.noTcs,  child: Text('NO TCS')),
-                DropdownMenuItem(value: TcsType.tcs01,  child: Text('TCS @0.1%')),
-                DropdownMenuItem(value: TcsType.tcs1,   child: Text('TCS @1%')),
-              ],
-              onChanged: (v) {
-                if (v != null) setState(() => _tcsType = v);
               },
             )),
           ],
@@ -1351,25 +1454,24 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
     );
   }
 
-  // ── Supplier Details body ──────────────────────────────────────────────
+  // ── Supplier body ──────────────────────────────────────────────────────
   Widget _buildSupplierBody() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _FieldLabel(label: 'Supplier Name'),
+        const _PFieldLabel(label: 'Supplier Name'),
         const SizedBox(height: 6),
         TextField(
           controller: _supplierNameCtrl,
           focusNode: _supplierFocus,
           textCapitalization: TextCapitalization.characters,
-          style: const TextStyle(
-              color: _C.textDark, fontSize: 15, fontWeight: FontWeight.w500),
+          style: const TextStyle(color: _C.textDark, fontSize: 15,
+              fontWeight: FontWeight.w500),
           onChanged: (val) {
-            setState(() => _supplierSuggestions = SupplierNames.search(val));
+            setState(() =>
+            _supplierSuggestions = _SupplierNames.search(val));
           },
           decoration: InputDecoration(
-            prefixIcon: const Icon(Icons.store_rounded,
-                color: _C.primary, size: 20),
             suffixIcon: _supplierNameCtrl.text.isNotEmpty
                 ? IconButton(
               icon: const Icon(Icons.clear, color: _C.textLight, size: 18),
@@ -1379,7 +1481,7 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
               }),
             )
                 : null,
-            hintText: 'Search or enter supplier name',
+            hintText: 'Search or enter Supplier name',
             hintStyle: const TextStyle(color: _C.textLight, fontSize: 14),
             filled: true, fillColor: _C.bg,
             contentPadding: const EdgeInsets.symmetric(
@@ -1396,20 +1498,18 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
           ),
         ),
         if (_supplierSuggestions.isNotEmpty) ...[
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           Container(
-            constraints: const BoxConstraints(maxHeight: 200),
+            constraints: const BoxConstraints(maxHeight: 220),
             decoration: BoxDecoration(
-              color: _C.surface,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: _C.primary.withOpacity(0.25)),
-              boxShadow: [
-                BoxShadow(color: _C.primary.withOpacity(0.08),
-                    blurRadius: 16, offset: const Offset(0, 4)),
-              ],
+              color: _C.primaryLt,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: _C.primary.withOpacity(0.3), width: 1.2),
+              boxShadow: [BoxShadow(color: _C.primary.withOpacity(0.12),
+                  blurRadius: 20, offset: const Offset(0, 6))],
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(16),
               child: ListView.separated(
                 shrinkWrap: true,
                 padding: EdgeInsets.zero,
@@ -1439,33 +1539,27 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
                           const SizedBox(width: 10),
                           Expanded(
                             child: idx >= 0 && query.isNotEmpty
-                                ? RichText(
-                              text: TextSpan(children: [
-                                TextSpan(
-                                  text: s.substring(0, idx),
-                                  style: const TextStyle(
-                                      color: _C.textMid, fontSize: 13,
-                                      fontWeight: FontWeight.w500),
-                                ),
-                                TextSpan(
-                                  text: s.substring(idx, idx + query.length),
-                                  style: const TextStyle(
-                                      color: _C.primary, fontSize: 13,
-                                      fontWeight: FontWeight.w800,
-                                      backgroundColor: Color(0xFFE8F5ED)),
-                                ),
-                                TextSpan(
-                                  text: s.substring(idx + query.length),
-                                  style: const TextStyle(
-                                      color: _C.textMid, fontSize: 13,
-                                      fontWeight: FontWeight.w500),
-                                ),
-                              ]),
-                            )
+                                ? RichText(text: TextSpan(children: [
+                              TextSpan(
+                                text: s.substring(0, idx),
+                                style: const TextStyle(color: _C.primaryDk,
+                                    fontSize: 13, fontWeight: FontWeight.w500),
+                              ),
+                              TextSpan(
+                                text: s.substring(idx, idx + query.length),
+                                style: const TextStyle(color: _C.primary,
+                                    fontSize: 13, fontWeight: FontWeight.w800,
+                                    backgroundColor: Color(0xFFBEEDD1)),
+                              ),
+                              TextSpan(
+                                text: s.substring(idx + query.length),
+                                style: const TextStyle(color: _C.primaryDk,
+                                    fontSize: 13, fontWeight: FontWeight.w500),
+                              ),
+                            ]))
                                 : Text(s,
-                                style: const TextStyle(
-                                    color: _C.textDark, fontSize: 13,
-                                    fontWeight: FontWeight.w500)),
+                                style: const TextStyle(color: _C.primaryDk,
+                                    fontSize: 13, fontWeight: FontWeight.w500)),
                           ),
                         ],
                       ),
@@ -1477,19 +1571,18 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
           ),
         ],
         const SizedBox(height: 14),
-        const _FieldLabel(label: 'Supplier Address'),
+        const _PFieldLabel(label: 'Supplier Address'),
         const SizedBox(height: 6),
-        _InputField(
+        _PInputField(
           controller: _supplierAddressCtrl,
-          hint: 'Enter supplier address',
-          icon: Icons.location_on_rounded,
+          hint: 'Enter Supplier address',
           maxLines: 2,
         ),
       ],
     );
   }
 
-  // ── Date & Reference body ──────────────────────────────────────────────
+  // ── Date & Ref body ────────────────────────────────────────────────────
   Widget _buildDateRefBody() {
     return Row(
       children: [
@@ -1497,7 +1590,7 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _FieldLabel(label: 'Date'),
+              const _PFieldLabel(label: 'Date'),
               const SizedBox(height: 6),
               GestureDetector(
                 onTap: _pickDate,
@@ -1514,12 +1607,9 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
                       const Icon(Icons.calendar_month_rounded,
                           color: _C.primary, size: 18),
                       const SizedBox(width: 8),
-                      Text(
-                        DateFormat('dd-MM-yyyy').format(_selectedDate),
-                        style: const TextStyle(
-                            color: _C.textDark, fontSize: 10,
-                            fontWeight: FontWeight.w600),
-                      ),
+                      Text(DateFormat('dd-MM-yyyy').format(_selectedDate),
+                          style: const TextStyle(color: _C.textDark,
+                              fontSize: 10, fontWeight: FontWeight.w600)),
                       const Spacer(),
                       const Icon(Icons.keyboard_arrow_down_rounded,
                           color: _C.textMid, size: 18),
@@ -1535,12 +1625,11 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _FieldLabel(label: 'Ref / Invoice No'),
+              const _PFieldLabel(label: 'Ref / Invoice No'),
               const SizedBox(height: 6),
-              _InputField(
+              _PInputField(
                 controller: _referenceCtrl,
                 hint: 'Enter invoice no',
-                icon: Icons.tag_rounded,
               ),
             ],
           ),
@@ -1549,400 +1638,11 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
     );
   }
 
-  Widget _buildSaveButton(double netTotal) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.green.shade300, Colors.green.shade200],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-              color: _C.primary.withOpacity(0.4),
-              blurRadius: 16,
-              offset: const Offset(0, 6)),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: _save,
-          borderRadius: BorderRadius.circular(18),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child: Row(
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'TOTAL AMOUNT',
-                      style: TextStyle(
-                          color: Colors.white60,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 1.0),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '₹${netTotal.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900),
-                    ),
-                  ],
-                ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 7, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white.withOpacity(0.3)),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.save_rounded, color: Colors.white, size: 18),
-                      SizedBox(width: 8),
-                      Text(
-                        'SAVE ORDER',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.5),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAddBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: _C.surface,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.06),
-              blurRadius: 16, offset: const Offset(0, 4)),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-                color: _C.primaryLt,
-                borderRadius: BorderRadius.circular(10)),
-            child: const Icon(Icons.shopping_cart_rounded,
-                color: _C.primary, size: 18),
-          ),
-          const SizedBox(width: 10),
-          const Text('Order Items',
-              style: TextStyle(
-                  color: _C.textDark, fontSize: 15,
-                  fontWeight: FontWeight.w700)),
-          const Spacer(),
-          GestureDetector(
-            onTap: () => _showItemDialog(),
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: _C.primary,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(color: _C.primary.withOpacity(0.3),
-                      blurRadius: 8, offset: const Offset(0, 3)),
-                ],
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.add_rounded, color: Colors.white, size: 18),
-                  SizedBox(width: 6),
-                  Text('ADD ITEM',
-                      style: TextStyle(
-                          color: Colors.white, fontSize: 12,
-                          fontWeight: FontWeight.w800, letterSpacing: 0.5)),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildItemsCards() {
-    return Container(
-      decoration: BoxDecoration(
-        color: _C.surface,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.06),
-              blurRadius: 16, offset: const Offset(0, 4)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Row(
-              children: [
-                const Text('Items',
-                    style: TextStyle(
-                        color: _C.textDark, fontSize: 14,
-                        fontWeight: FontWeight.w700)),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: _C.primaryLt,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text('${_items.length}',
-                      style: const TextStyle(
-                          color: _C.primary, fontSize: 11,
-                          fontWeight: FontWeight.w700)),
-                ),
-              ],
-            ),
-          ),
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _items.length,
-            separatorBuilder: (_, __) => Divider(
-                height: 1, indent: 16, endIndent: 16, color: _C.border),
-            itemBuilder: (_, i) {
-              final item     = _items[i];
-              final selected = _selectedIndex == i;
-              return GestureDetector(
-                onTap: () =>
-                    setState(() => _selectedIndex = selected ? null : i),
-                onDoubleTap: () =>
-                    _showItemDialog(existing: item, editIndex: i),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 5),
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: selected ? _C.primaryLt : _C.bg,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: selected
-                          ? _C.primary.withOpacity(0.4) : _C.border,
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 26, height: 26,
-                            decoration: BoxDecoration(
-                              color: selected
-                                  ? _C.primary
-                                  : _C.primary.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Center(
-                              child: Text('${i + 1}',
-                                  style: TextStyle(
-                                      color: selected
-                                          ? Colors.white : _C.primary,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w800)),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(item.product,
-                                style: const TextStyle(
-                                    color: _C.textDark, fontSize: 13,
-                                    fontWeight: FontWeight.w700),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis),
-                          ),
-                          const SizedBox(width: 8),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text('₹${item.grandTotal.toStringAsFixed(2)}',
-                                  style: const TextStyle(
-                                      color: _C.primary, fontSize: 14,
-                                      fontWeight: FontWeight.w900)),
-                              Container(
-                                margin: const EdgeInsets.only(top: 2),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: item.taxType == TaxType.inclusive
-                                      ? const Color(0xFFE8F5ED)
-                                      : const Color(0xFFFFF3CD),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  item.taxType == TaxType.inclusive
-                                      ? 'incl. tax' : 'excl. tax',
-                                  style: TextStyle(
-                                    color: item.taxType == TaxType.inclusive
-                                        ? _C.primary : _C.gold,
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Wrap(
-                        spacing: 6, runSpacing: 4,
-                        children: [
-                          _InfoChip(icon: Icons.currency_rupee_rounded,
-                              value: '₹${item.price.toStringAsFixed(0)}'),
-                          _InfoChip(icon: Icons.layers_rounded,
-                              value: '× ${item.quantity}'),
-                          if (item.discountValue > 0)
-                            _InfoChip(
-                              icon: Icons.discount_rounded,
-                              value: item.discountIsPercent
-                                  ? '${item.discountValue.toStringAsFixed(0)}% off'
-                                  : '₹${item.discountValue.toStringAsFixed(0)} off',
-                              isHighlight: true,
-                            ),
-                          _InfoChip(icon: Icons.percent_rounded,
-                              value:
-                              '${item.taxRate.toStringAsFixed(0)}% tax'),
-                          _InfoChip(icon: Icons.edit_rounded,
-                              value: 'double-tap to edit'),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 12),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDeleteBar() {
-    String selectedLabel = 'Tap an item to select';
-    if (_selectedIndex != null && _selectedIndex! < _items.length) {
-      final name = _items[_selectedIndex!].product;
-      selectedLabel = name.length > 24 ? '${name.substring(0, 24)}…' : name;
-    }
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: _C.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _C.red.withOpacity(0.15)),
-        boxShadow: [
-          BoxShadow(color: _C.red.withOpacity(0.05),
-              blurRadius: 16, offset: const Offset(0, 4)),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-                color: _C.red.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(10)),
-            child: const Icon(Icons.delete_sweep_rounded,
-                color: _C.red, size: 18),
-          ),
-          const SizedBox(width: 10),
-          Flexible(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('Remove Item',
-                    style: TextStyle(
-                        color: _C.textDark, fontSize: 13,
-                        fontWeight: FontWeight.w700)),
-                const SizedBox(height: 2),
-                Text(selectedLabel,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: _selectedIndex != null ? _C.red : _C.textLight,
-                      fontSize: 11, fontWeight: FontWeight.w500,
-                    )),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: _deleteSelected,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: _selectedIndex != null
-                    ? _C.red : _C.red.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: _selectedIndex != null
-                      ? _C.red : _C.red.withOpacity(0.25),
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.delete_rounded,
-                      color: _selectedIndex != null
-                          ? Colors.white : _C.red, size: 16),
-                  const SizedBox(width: 5),
-                  Text('DELETE',
-                      style: TextStyle(
-                        color: _selectedIndex != null
-                            ? Colors.white : _C.red,
-                        fontSize: 12, fontWeight: FontWeight.w800,
-                        letterSpacing: 0.4,
-                      )),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
+  // ── Summary card ───────────────────────────────────────────────────────
   Widget _buildSummaryCard() {
     double tcsAmount = 0;
-    if (_tcsType == TcsType.tcs01) tcsAmount = _grandTotal * 0.001;
-    if (_tcsType == TcsType.tcs1)  tcsAmount = _grandTotal * 0.01;
+    if (_tcsType == _TcsType.tcs01) tcsAmount = _grandTotal * 0.001;
+    if (_tcsType == _TcsType.tcs1)  tcsAmount = _grandTotal * 0.01;
     final netTotal = _grandTotal + tcsAmount;
 
     return Container(
@@ -1962,28 +1662,26 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                    color: _C.primaryLt,
+                decoration: BoxDecoration(color: _C.primaryLt,
                     borderRadius: BorderRadius.circular(10)),
                 child: const Icon(Icons.summarize_rounded,
                     color: _C.primary, size: 18),
               ),
               const SizedBox(width: 10),
               const Text('Order Summary',
-                  style: TextStyle(
-                      color: _C.textDark, fontSize: 15,
+                  style: TextStyle(color: _C.textDark, fontSize: 15,
                       fontWeight: FontWeight.w700)),
             ],
           ),
           const SizedBox(height: 16),
-          _SummaryRow('Subtotal', '₹${_subTotal.toStringAsFixed(2)}'),
+          _PSummaryRow('Subtotal', '₹${_subTotal.toStringAsFixed(2)}'),
           if (_discTotal > 0)
-            _SummaryRow('Discount',
+            _PSummaryRow('Discount',
                 '− ₹${_discTotal.toStringAsFixed(2)}', isRed: true),
-          _SummaryRow('Tax', '₹${_taxTotal.toStringAsFixed(2)}'),
+          _PSummaryRow('Tax', '₹${_taxTotal.toStringAsFixed(2)}'),
           if (tcsAmount > 0)
-            _SummaryRow(
-              _tcsType == TcsType.tcs01 ? 'TCS @0.1%' : 'TCS @1%',
+            _PSummaryRow(
+              _tcsType == _TcsType.tcs01 ? 'TCS @0.1%' : 'TCS @1%',
               '₹${tcsAmount.toStringAsFixed(2)}',
             ),
           const Divider(height: 20, color: _C.border),
@@ -1991,12 +1689,10 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text('Grand Total',
-                  style: TextStyle(
-                      color: _C.textDark, fontSize: 15,
+                  style: TextStyle(color: _C.textDark, fontSize: 15,
                       fontWeight: FontWeight.w700)),
               Text('₹${netTotal.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                      color: _C.primary, fontSize: 20,
+                  style: const TextStyle(color: _C.primary, fontSize: 20,
                       fontWeight: FontWeight.w900)),
             ],
           ),
@@ -2005,6 +1701,118 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
     );
   }
 
+  // ── Bottom bar ─────────────────────────────────────────────────────────
+  Widget _buildBottomBar() {
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: _transferType == TransferType.returnOrder
+                  ? [_C.red, const Color(0xFFB91C1C)]
+                  : [_C.primary, _C.primaryDk],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: (_transferType == TransferType.returnOrder
+                    ? _C.red
+                    : _C.primary)
+                    .withOpacity(0.45),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: _save,
+              borderRadius: BorderRadius.circular(20),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 20, vertical: 14),
+                child: Row(
+                  children: [
+                    // ── Left: Total label + amount ──────────────────
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'TOTAL AMOUNT',
+                          style: TextStyle(
+                            color: Colors.white60,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '₹${_grandTotal.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const Spacer(),
+
+                    // ── Right: Save button ──────────────────────────
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 13),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.18),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                            color: Colors.white.withOpacity(0.35), width: 1),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _transferType == TransferType.returnOrder
+                                ? Icons.assignment_return_rounded
+                                : Icons.save_rounded,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            _transferType == TransferType.returnOrder
+                                ? 'SAVE RETURN'
+                                : 'SAVE ORDER',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.6,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── View Orders ────────────────────────────────────────────────────────
   Widget _buildViewOrders() {
     if (_savedOrders.isEmpty) {
       return Center(
@@ -2021,19 +1829,20 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
             ),
             const SizedBox(height: 20),
             const Text('No Orders Yet',
-                style: TextStyle(
-                    color: _C.textDark, fontSize: 18,
+                style: TextStyle(color: _C.textDark, fontSize: 18,
                     fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
             const Text('Save an order to see it here',
                 style: TextStyle(color: _C.textMid, fontSize: 14)),
             const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: () => setState(() => _showViewOrders = false),
-              icon: const Icon(Icons.add_rounded, color: Colors.white, size: 18),
+              onPressed: () =>
+                  setState(() => _showViewOrders = false),
+              icon: const Icon(Icons.add_rounded,
+                  color: Colors.white, size: 18),
               label: const Text('Create Order',
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.w700)),
+                  style: TextStyle(color: Colors.white,
+                      fontWeight: FontWeight.w700)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: _C.primary,
                 padding: const EdgeInsets.symmetric(
@@ -2046,7 +1855,6 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
         ),
       );
     }
-
     return ListView.builder(
       key: const ValueKey('list'),
       padding: const EdgeInsets.all(16),
@@ -2056,33 +1864,26 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
     );
   }
 
-  Widget _buildOrderCard(SavedOrder order, int index) {
-    final orderTypeLabel = {
-      OrderType.wholesaleBB: 'Wholesale B-B',
-      OrderType.retailBC:    'Retail B-C',
-      OrderType.wholesaleBC: 'Wholesale B-C',
-    }[order.orderType]!;
-
-    final gstLabel =
-    order.gstType == GstType.cgstSgst ? 'CGST/SGST' : 'IGST';
+  Widget _buildOrderCard(_SavedPurchase order, int index) {
+    final typeLabel = order.purchaseType == _PurchaseType.purchase
+        ? 'Purchase' : 'Purchase Return';
+    final gstLabel  = order.gstType == _GstType.cgstSgst ? 'CGST/SGST' : 'IGST';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
         color: _C.surface,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.06),
-              blurRadius: 16, offset: const Offset(0, 4)),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06),
+            blurRadius: 16, offset: const Offset(0, 4))],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: Column(
           children: [
+            // ── Card header ──────────────────────────────────────────
             Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [_C.primary, _C.primaryDk],
@@ -2098,19 +1899,15 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Text(
-                      'PO-${_savedOrders.length - index}',
-                      style: const TextStyle(
-                          color: Colors.white, fontSize: 11,
-                          fontWeight: FontWeight.w700),
-                    ),
+                    child: Text('PO-${_savedOrders.length - index}',
+                        style: const TextStyle(color: Colors.white,
+                            fontSize: 11, fontWeight: FontWeight.w700)),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(order.supplierName,
-                        style: const TextStyle(
-                            color: Colors.white, fontSize: 15,
-                            fontWeight: FontWeight.w700),
+                        style: const TextStyle(color: Colors.white,
+                            fontSize: 15, fontWeight: FontWeight.w700),
                         overflow: TextOverflow.ellipsis),
                   ),
                   Text(DateFormat('dd MMM yyyy').format(order.date),
@@ -2127,13 +1924,13 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
                   Wrap(
                     spacing: 6, runSpacing: 6,
                     children: [
-                      _Tag(label: orderTypeLabel),
-                      _Tag(label: gstLabel),
-                      _Tag(label: order.globalTaxType == TaxType.exclusive
+                      _PTag(label: typeLabel),
+                      _PTag(label: gstLabel),
+                      _PTag(label: order.globalTaxType == _TaxType.exclusive
                           ? 'Excl. Tax' : 'Incl. Tax'),
-                      if (order.tcsType != TcsType.noTcs)
-                        _Tag(
-                            label: order.tcsType == TcsType.tcs01
+                      if (order.tcsType != _TcsType.noTcs)
+                        _PTag(
+                            label: order.tcsType == _TcsType.tcs01
                                 ? 'TCS 0.1%' : 'TCS 1%',
                             isGold: true),
                     ],
@@ -2147,9 +1944,8 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(order.supplierAddress,
-                              style: const TextStyle(
-                                  color: _C.textMid, fontSize: 12,
-                                  fontWeight: FontWeight.w500),
+                              style: const TextStyle(color: _C.textMid,
+                                  fontSize: 12, fontWeight: FontWeight.w500),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis),
                         ),
@@ -2165,9 +1961,8 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
                         const SizedBox(width: 4),
                         Flexible(
                           child: Text('Ref: ${order.reference}',
-                              style: const TextStyle(
-                                  color: _C.textMid, fontSize: 12,
-                                  fontWeight: FontWeight.w500),
+                              style: const TextStyle(color: _C.textMid,
+                                  fontSize: 12, fontWeight: FontWeight.w500),
                               overflow: TextOverflow.ellipsis),
                         ),
                       ],
@@ -2176,24 +1971,15 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      _StatBox(
-                        label: 'Items',
-                        value: '${order.items.length}',
-                        icon: Icons.list_rounded,
-                      ),
+                      _PStatBox(label: 'Items',
+                          value: '${order.items.length}'),
                       const SizedBox(width: 8),
-                      _StatBox(
-                        label: 'Tax',
-                        value: '₹${order.taxTotal.toStringAsFixed(0)}',
-                        icon: Icons.percent_rounded,
-                      ),
+                      _PStatBox(label: 'Tax',
+                          value: '₹${order.taxTotal.toStringAsFixed(0)}'),
                       if (order.discTotal > 0) ...[
                         const SizedBox(width: 8),
-                        _StatBox(
-                          label: 'Discount',
-                          value: '₹${order.discTotal.toStringAsFixed(0)}',
-                          icon: Icons.discount_rounded,
-                        ),
+                        _PStatBox(label: 'Discount',
+                            value: '₹${order.discTotal.toStringAsFixed(0)}'),
                       ],
                     ],
                   ),
@@ -2210,17 +1996,15 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(item.product,
-                              style: const TextStyle(
-                                  color: _C.textDark, fontSize: 12,
-                                  fontWeight: FontWeight.w500),
+                              style: const TextStyle(color: _C.textDark,
+                                  fontSize: 12, fontWeight: FontWeight.w500),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis),
                         ),
                         const SizedBox(width: 8),
                         Text('₹${item.grandTotal.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                                color: _C.textDark, fontSize: 12,
-                                fontWeight: FontWeight.w700)),
+                            style: const TextStyle(color: _C.textDark,
+                                fontSize: 12, fontWeight: FontWeight.w700)),
                       ],
                     ),
                   )),
@@ -2228,8 +2012,7 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
                     const SizedBox(height: 4),
                     Text(
                       '+ ${order.items.length - 2} more item${order.items.length - 2 == 1 ? '' : 's'}',
-                      style: const TextStyle(
-                          color: _C.primary, fontSize: 12,
+                      style: const TextStyle(color: _C.primary, fontSize: 12,
                           fontWeight: FontWeight.w600),
                     ),
                   ],
@@ -2240,12 +2023,10 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text('Grand Total',
-                          style: TextStyle(
-                              color: _C.textMid, fontSize: 13,
+                          style: TextStyle(color: _C.textMid, fontSize: 13,
                               fontWeight: FontWeight.w600)),
                       Text('₹${order.grandTotal.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                              color: _C.primary, fontSize: 20,
+                          style: const TextStyle(color: _C.primary, fontSize: 20,
                               fontWeight: FontWeight.w900)),
                     ],
                   ),
@@ -2259,258 +2040,175 @@ class _PurchaseOrderScreenState extends State<PurchaseOrderScreen>
   }
 }
 
-// ── _StatBox ──────────────────────────────────────────────────────────────
-class _StatBox extends StatelessWidget {
-  final String   label;
-  final String   value;
-  final IconData icon;
+// ══════════════════════════════════════════════════════════════════════════════
+//  Reusable Widgets (prefixed _P to avoid conflict with sales screen)
+// ══════════════════════════════════════════════════════════════════════════════
 
-  const _StatBox({
-    required this.label,
-    required this.value,
-    required this.icon,
-  });
-
+class _PStatBox extends StatelessWidget {
+  final String label, value;
+  const _PStatBox({required this.label, required this.value});
   @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        decoration: BoxDecoration(
-          color: _C.primaryLt,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Icon(icon, color: _C.primary, size: 13),
-            const SizedBox(width: 5),
-            Flexible(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    value,
-                    style: const TextStyle(
-                        color: _C.primary, fontSize: 12,
-                        fontWeight: FontWeight.w800),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
-                  Text(
-                    label,
-                    style: const TextStyle(
-                        color: _C.textMid, fontSize: 10,
-                        fontWeight: FontWeight.w500),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Reusable Widgets ──────────────────────────────────────────────────────
-
-class _FieldLabel extends StatelessWidget {
-  final String label;
-  const _FieldLabel({required this.label});
-  @override
-  Widget build(BuildContext context) => Text(label,
-      style: const TextStyle(
-          color: _C.textMid, fontSize: 13,
-          fontWeight: FontWeight.w600, letterSpacing: 0.2));
-}
-
-class _InputField extends StatelessWidget {
-  final TextEditingController controller;
-  final String                 hint;
-  final IconData               icon;
-  final TextInputType          keyboardType;
-  final ValueChanged<String>?  onChanged;
-  final int                    maxLines;
-
-  const _InputField({
-    required this.controller,
-    required this.hint,
-    required this.icon,
-    this.keyboardType = TextInputType.text,
-    this.onChanged,
-    this.maxLines = 1,
-  });
-
-  @override
-  Widget build(BuildContext context) => TextField(
-    controller: controller,
-    keyboardType: keyboardType,
-    onChanged: onChanged,
-    maxLines: maxLines,
-    style: const TextStyle(
-        color: _C.textDark, fontSize: 15, fontWeight: FontWeight.w500),
-    decoration: InputDecoration(
-      hintText: hint,
-      hintStyle: const TextStyle(color: _C.textLight, fontSize: 14),
-      prefixIcon: Icon(icon, color: _C.primary, size: 20),
-      filled: true, fillColor: _C.bg,
-      contentPadding:
-      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: _C.border),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: _C.border),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: _C.primary, width: 1.5),
+  Widget build(BuildContext context) => Expanded(
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      decoration: BoxDecoration(
+          color: _C.primaryLt, borderRadius: BorderRadius.circular(10)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(value,
+              style: const TextStyle(color: _C.primary, fontSize: 12,
+                  fontWeight: FontWeight.w800),
+              overflow: TextOverflow.ellipsis),
+          Text(label,
+              style: const TextStyle(color: _C.textMid, fontSize: 10,
+                  fontWeight: FontWeight.w500),
+              overflow: TextOverflow.ellipsis),
+        ],
       ),
     ),
   );
 }
 
-class _DialogField extends StatelessWidget {
-  final String                 label;
-  final TextEditingController  controller;
-  final IconData               icon;
-  final TextInputType          keyboardType;
-  final ValueChanged<String>?  onChanged;
+class _PFieldLabel extends StatelessWidget {
+  final String label;
+  const _PFieldLabel({required this.label});
+  @override
+  Widget build(BuildContext context) => Text(label,
+      style: const TextStyle(color: _C.textMid, fontSize: 13,
+          fontWeight: FontWeight.w600, letterSpacing: 0.2));
+}
 
-  const _DialogField({
-    required this.label,
-    required this.controller,
-    required this.icon,
-    this.keyboardType = TextInputType.text,
-    this.onChanged,
+class _PInputField extends StatelessWidget {
+  final TextEditingController controller;
+  final String hint;
+  final TextInputType keyboardType;
+  final ValueChanged<String>? onChanged;
+  final int maxLines;
+  const _PInputField({
+    required this.controller, required this.hint,
+    this.keyboardType = TextInputType.text, this.onChanged, this.maxLines = 1,
   });
+  @override
+  Widget build(BuildContext context) => TextField(
+    controller: controller, keyboardType: keyboardType,
+    onChanged: onChanged, maxLines: maxLines,
+    style: const TextStyle(color: _C.textDark, fontSize: 15,
+        fontWeight: FontWeight.w500),
+    decoration: InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(color: _C.textLight, fontSize: 14),
+      filled: true, fillColor: _C.bg,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: _C.border)),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: _C.border)),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: _C.primary, width: 1.5)),
+    ),
+  );
+}
 
+class _PDialogField extends StatelessWidget {
+  final String label;
+  final TextEditingController controller;
+  final TextInputType keyboardType;
+  final ValueChanged<String>? onChanged;
+  const _PDialogField({
+    required this.label, required this.controller,
+    this.keyboardType = TextInputType.text, this.onChanged,
+  });
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(label,
-          style: const TextStyle(
-              color: _C.textMid, fontSize: 12,
-              fontWeight: FontWeight.w600)),
+      Text(label, style: const TextStyle(color: _C.textMid, fontSize: 12,
+          fontWeight: FontWeight.w600)),
       const SizedBox(height: 6),
       TextField(
-        controller: controller,
-        keyboardType: keyboardType,
+        controller: controller, keyboardType: keyboardType,
         onChanged: onChanged,
-        style: const TextStyle(
-            color: _C.textDark, fontSize: 14,
+        style: const TextStyle(color: _C.textDark, fontSize: 14,
             fontWeight: FontWeight.w500),
         decoration: InputDecoration(
-          prefixIcon: Icon(icon, color: _C.primary, size: 18),
           filled: true, fillColor: _C.bg,
           contentPadding: const EdgeInsets.symmetric(
               horizontal: 12, vertical: 12),
-          border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: _C.border)),
-          enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: _C.border)),
-          focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide:
-              const BorderSide(color: _C.primary, width: 1.5)),
+          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: _C.primary, width: 1.5)),
         ),
       ),
     ],
   );
 }
 
-class _TypeDropdown<T> extends StatelessWidget {
-  final String                   label;
-  final T                        value;
+class _PTypeDropdown<T> extends StatelessWidget {
+  final String label;
+  final T value;
   final List<DropdownMenuItem<T>> items;
-  final ValueChanged<T?>         onChanged;
-
-  const _TypeDropdown({
-    required this.label,
-    required this.value,
-    required this.items,
-    required this.onChanged,
+  final ValueChanged<T?> onChanged;
+  const _PTypeDropdown({
+    required this.label, required this.value,
+    required this.items, required this.onChanged,
   });
-
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label,
-            style: const TextStyle(
-                color: _C.textMid, fontSize: 12,
-                fontWeight: FontWeight.w600)),
-        const SizedBox(height: 6),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-          decoration: BoxDecoration(
-            color: _C.bg,
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(label, style: const TextStyle(color: _C.textMid, fontSize: 12,
+          fontWeight: FontWeight.w600)),
+      const SizedBox(height: 6),
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+        decoration: BoxDecoration(color: _C.bg,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: _C.border),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<T>(
-              value: value,
-              isExpanded: true,
-              icon: const Icon(Icons.keyboard_arrow_down_rounded,
-                  color: _C.primary, size: 18),
-              dropdownColor: _C.surface,
-              style: const TextStyle(
-                  color: _C.textDark, fontSize: 13,
-                  fontWeight: FontWeight.w600),
-              items: items,
-              onChanged: onChanged,
-            ),
+            border: Border.all(color: _C.border)),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<T>(
+            value: value, isExpanded: true,
+            icon: const Icon(Icons.keyboard_arrow_down_rounded,
+                color: _C.primary, size: 18),
+            dropdownColor: _C.surface,
+            style: const TextStyle(color: _C.textDark, fontSize: 13,
+                fontWeight: FontWeight.w600),
+            items: items, onChanged: onChanged,
           ),
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
 }
 
-class _SummaryRow extends StatelessWidget {
+class _PSummaryRow extends StatelessWidget {
   final String label, value;
-  final bool   isRed;
-  const _SummaryRow(this.label, this.value, {this.isRed = false});
+  final bool isRed;
+  const _PSummaryRow(this.label, this.value, {this.isRed = false});
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 4),
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label,
-            style: const TextStyle(
-                color: _C.textMid, fontSize: 13,
-                fontWeight: FontWeight.w500)),
+        Text(label, style: const TextStyle(color: _C.textMid, fontSize: 13,
+            fontWeight: FontWeight.w500)),
         Text(value,
-            style: TextStyle(
-                color: isRed ? _C.red : _C.textDark,
+            style: TextStyle(color: isRed ? _C.red : _C.textDark,
                 fontSize: 13, fontWeight: FontWeight.w700)),
       ],
     ),
   );
 }
 
-class _InfoChip extends StatelessWidget {
-  final IconData icon;
-  final String   value;
-  final bool     isHighlight;
-  const _InfoChip({
-    required this.icon,
-    required this.value,
-    this.isHighlight = false,
-  });
+class _PInfoChip extends StatelessWidget {
+  final String value;
+  final bool isHighlight;
+  const _PInfoChip({required this.value, this.isHighlight = false});
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -2518,28 +2216,19 @@ class _InfoChip extends StatelessWidget {
       color: isHighlight ? const Color(0xFFFFF3CD) : _C.surface,
       borderRadius: BorderRadius.circular(8),
       border: Border.all(
-          color: isHighlight
-              ? _C.gold.withOpacity(0.5) : _C.border),
+          color: isHighlight ? _C.gold.withOpacity(0.5) : _C.border),
     ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon,
-            color: isHighlight ? _C.gold : _C.textMid, size: 11),
-        const SizedBox(width: 4),
-        Text(value,
-            style: TextStyle(
-                color: isHighlight ? _C.gold : _C.textDark,
-                fontSize: 11, fontWeight: FontWeight.w600)),
-      ],
-    ),
+    child: Text(value,
+        style: TextStyle(
+            color: isHighlight ? _C.gold : _C.textDark,
+            fontSize: 11, fontWeight: FontWeight.w600)),
   );
 }
 
-class _Tag extends StatelessWidget {
+class _PTag extends StatelessWidget {
   final String label;
-  final bool   isGold;
-  const _Tag({required this.label, this.isGold = false});
+  final bool isGold;
+  const _PTag({required this.label, this.isGold = false});
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -2547,9 +2236,7 @@ class _Tag extends StatelessWidget {
       color: isGold ? const Color(0xFFFFF3CD) : _C.primaryLt,
       borderRadius: BorderRadius.circular(6),
       border: Border.all(
-          color: isGold
-              ? _C.gold.withOpacity(0.4)
-              : _C.primary.withOpacity(0.2)),
+          color: isGold ? _C.gold.withOpacity(0.4) : _C.primary.withOpacity(0.2)),
     ),
     child: Text(label,
         style: TextStyle(

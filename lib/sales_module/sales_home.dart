@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-
 import '../sales_module/sales_order_screen.dart';
 import '../sales_module/sales_delivery_screen.dart';
 import '../sales_module/sales_invoice_screen.dart';
+import '../sales_module/sales_quotation_screen.dart';
+import '../screens/dashboard_screen.dart';
+import '../sales_module/sales_return_invoice_screen.dart';
 
 // ═══════════════════════════════════════════
 //  COLORS
@@ -21,10 +23,12 @@ class AC {
 //  ASSET ICON PATHS
 // ═══════════════════════════════════════════
 const String _isSales        = 'assets/icons/sales.png';
+const String _iSalesQuotation = 'assets/icons/sales_quotation.png';
 const String _iSalesOrder    = 'assets/icons/sales_order.png';
-const String _iOrderList     = 'assets/icons/order_list.png';
 const String _iSalesDelivery = 'assets/icons/sales_delivery.png';
 const String _iSalesInvoice  = 'assets/icons/sales_invoice.png';
+const String _iSalesReturnI  = 'assets/icons/sales_return_invoice.png';
+
 
 // ═══════════════════════════════════════════
 //  HOME SCREEN
@@ -41,16 +45,17 @@ class SalesHomeScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AC.bgGrey,
       appBar: _buildAppBar(context, w),
+      bottomNavigationBar: buildAppBottomNav(context, 1),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         child: Column(
           children: [
-            SizedBox(height: h * 0.018),
+            SizedBox(height: h * 0.00009),
 
             // ── Banner Carousel — full width, no side padding ──
             const _BannerCarousel(),
 
-            SizedBox(height: h * 0.024),
+            SizedBox(height: h * 0.020),
 
             // ── Sales Section ────────────────────
             Padding(
@@ -62,25 +67,31 @@ class SalesHomeScreen extends StatelessWidget {
                 subtitle:  'Manage orders, delivery & invoices',
                 items: [
                   _MenuItem(
-                    assetIcon:   _iSalesOrder,
-                    label:       'Sales Order',
-                    badge:       'New',
-                    destination: const SalesOrderScreen(),
+                    assetIcon: _iSalesQuotation,
+                    label: 'Sales Quotation',
+                    destination: const SalesQuotationScreen(),
                   ),
                   _MenuItem(
-                    assetIcon:   _iOrderList,
-                    label:       'Order List',
-                    destination: null,
+                    assetIcon:   _iSalesOrder,
+                    label:       'Sales Order',
+                    destination: const SalesOrderScreen(),
                   ),
+
                   _MenuItem(
                     assetIcon:   _iSalesDelivery,
                     label:       'Direct Delivery',
                     destination: const SalesDeliveryScreen(),
                   ),
+
                   _MenuItem(
                     assetIcon:   _iSalesInvoice,
                     label:       'Sales Invoice',
                     destination: const SalesInvoiceScreen(),
+                  ),
+                  _MenuItem(
+                    assetIcon:   _iSalesReturnI,
+                    label:       'Sales Return Invoice',
+                    destination: const SalesReturnInvoiceScreen(),
                   ),
                 ],
               ),
@@ -98,8 +109,15 @@ class SalesHomeScreen extends StatelessWidget {
       backgroundColor: AC.green,
       elevation: 0,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.white),
-        onPressed: () => Navigator.pop(context),
+        icon: const Icon(Icons.arrow_back_ios_new_rounded,
+            color: Colors.white, size: 20),
+        onPressed: () {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const DashboardScreen()),
+                (route) => false,
+          );
+        },
       ),
       title: Text(
         'Sales',
@@ -178,7 +196,7 @@ class _BannerCarouselState extends State<_BannerCarousel> {
     final w       = MediaQuery.of(context).size.width;
     final h       = MediaQuery.of(context).size.height;
     // ✅ FIX: full screen width — no horizontal padding, taller height
-    final bannerH = h * 0.26;
+    final bannerH = h * 0.24;
 
     return SizedBox(
       width:  w,          // full screen width
@@ -310,7 +328,7 @@ class _MenuItem {
 // ═══════════════════════════════════════════
 //  SECTION CARD
 // ═══════════════════════════════════════════
-class _SectionCard extends StatefulWidget {
+class _SectionCard extends StatelessWidget {
   final double          w, h;
   final String          assetIcon;
   final String          title;
@@ -328,49 +346,7 @@ class _SectionCard extends StatefulWidget {
   });
 
   @override
-  State<_SectionCard> createState() => _SectionCardState();
-}
-
-class _SectionCardState extends State<_SectionCard>
-    with SingleTickerProviderStateMixin {
-  static const int _alwaysVisible = 3;
-  bool _expanded = false;
-  late final AnimationController _anim;
-  late final Animation<double>   _rotate;
-
-  @override
-  void initState() {
-    super.initState();
-    _anim   = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 300));
-    _rotate = Tween<double>(begin: 0, end: 0.5).animate(
-        CurvedAnimation(parent: _anim, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _anim.dispose();
-    super.dispose();
-  }
-
-  void _toggle() {
-    setState(() => _expanded = !_expanded);
-    _expanded ? _anim.forward() : _anim.reverse();
-  }
-
-  List<_MenuItem> get _visibleItems =>
-      widget.items.take(_alwaysVisible).toList();
-  List<_MenuItem> get _hiddenItems =>
-      widget.items.length > _alwaysVisible
-          ? widget.items.skip(_alwaysVisible).toList()
-          : [];
-  bool get _hasMore => _hiddenItems.isNotEmpty;
-
-  @override
   Widget build(BuildContext context) {
-    final w = widget.w;
-    final h = widget.h;
-
     return Container(
       decoration: BoxDecoration(
         color:        Colors.white,
@@ -403,7 +379,7 @@ class _SectionCardState extends State<_SectionCard>
               ),
             ),
             padding: EdgeInsets.fromLTRB(
-              w * 0.05, h * 0.018, w * 0.05, h * 0.018,
+              w * 0.05, h * 0.018, w * 0.05, h * 0.010,
             ),
             child: Row(
               children: [
@@ -421,7 +397,7 @@ class _SectionCardState extends State<_SectionCard>
                   ),
                   child: Center(
                     child: Image.asset(
-                      widget.assetIcon,
+                      assetIcon,
                       width:  w * 0.075,
                       height: w * 0.075,
                       errorBuilder: (_, __, ___) => Icon(
@@ -440,7 +416,7 @@ class _SectionCardState extends State<_SectionCard>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.title,
+                        title,
                         style: TextStyle(
                           fontSize:      w * 0.060,
                           fontWeight:    FontWeight.w800,
@@ -450,7 +426,7 @@ class _SectionCardState extends State<_SectionCard>
                       ),
                       SizedBox(height: h * 0.004),
                       Text(
-                        widget.subtitle,
+                        subtitle,
                         style: TextStyle(
                           fontSize: w * 0.030,
                           color:    Colors.white.withOpacity(0.82),
@@ -459,122 +435,29 @@ class _SectionCardState extends State<_SectionCard>
                     ],
                   ),
                 ),
-
-
               ],
             ),
           ),
 
           // ══════════════════════════════════
-          // ALWAYS-VISIBLE FIRST 3 ITEMS
+          // ALL MENU ITEMS (Always visible)
           // ══════════════════════════════════
           Padding(
             padding: EdgeInsets.fromLTRB(
-              w * 0.035, h * 0.018, w * 0.035, h * 0.010,
+              w * 0.035, h * 0.018, w * 0.035, h * 0.020,
             ),
-            child: _buildTileGrid(_visibleItems, w, h),
+            child: _buildTileGrid(items, w, h),
           ),
-
-          // ══════════════════════════════════
-          // HIDDEN ITEMS (animated expand)
-          // ══════════════════════════════════
-          if (_hasMore)
-            AnimatedSize(
-              duration: const Duration(milliseconds: 300),
-              curve:    Curves.easeInOut,
-              child: _expanded
-                  ? Padding(
-                padding: EdgeInsets.fromLTRB(
-                  w * 0.035, 0, w * 0.035, h * 0.010,
-                ),
-                child: Column(
-                  children: [
-                    _DashedDivider(color: AC.green.withOpacity(0.25)),
-                    SizedBox(height: h * 0.012),
-                    _buildTileGrid(_hiddenItems, w, h),
-                  ],
-                ),
-              )
-                  : const SizedBox.shrink(),
-            ),
-
-          // ══════════════════════════════════
-          // SHOW MORE / LESS FOOTER
-          // ══════════════════════════════════
-          if (_hasMore) ...[
-            Container(
-              margin: EdgeInsets.fromLTRB(
-                w * 0.035, 0, w * 0.035, h * 0.016,
-              ),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AC.green.withOpacity(0.08),
-                    AC.green.withOpacity(0.14),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(w * 0.030),
-                border: Border.all(
-                  color: AC.green.withOpacity(0.25), width: 1,
-                ),
-              ),
-              child: InkWell(
-                onTap:        _toggle,
-                borderRadius: BorderRadius.circular(w * 0.030),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: h * 0.013),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      RotationTransition(
-                        turns: _rotate,
-                        child: Container(
-                          width:  w * 0.070,
-                          height: w * 0.070,
-                          decoration: const BoxDecoration(
-                            color: AC.green,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.keyboard_arrow_down_rounded,
-                            color: Colors.white,
-                            size:  w * 0.048,
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: w * 0.025),
-                      Text(
-                        _expanded ? 'Show Less' : 'Show More',
-                        style: TextStyle(
-                          fontSize:   w * 0.038,
-                          fontWeight: FontWeight.w700,
-                          color:      AC.greenDark,
-                        ),
-                      ),
-                      SizedBox(width: w * 0.018),
-                      if (!_expanded)
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: w * 0.022, vertical: h * 0.003,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ] else
-            SizedBox(height: h * 0.012),
         ],
       ),
     );
   }
 
   // ── Grid builder ────────────────────────
-  Widget _buildTileGrid(List<_MenuItem> items, double w, double h) {
+  Widget _buildTileGrid(List<_MenuItem> menuItems, double w, double h) {
     final rows = <List<_MenuItem>>[];
-    for (int i = 0; i < items.length; i += 3) {
-      rows.add(items.sublist(i, (i + 3).clamp(0, items.length)));
+    for (int i = 0; i < menuItems.length; i += 3) {
+      rows.add(menuItems.sublist(i, (i + 3).clamp(0, menuItems.length)));
     }
 
     return Column(
@@ -609,34 +492,6 @@ class _SectionCardState extends State<_SectionCard>
           ],
         );
       }).toList(),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════
-//  DASHED DIVIDER
-// ═══════════════════════════════════════════
-class _DashedDivider extends StatelessWidget {
-  final Color color;
-  const _DashedDivider({required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (_, constraints) {
-        const dashW = 6.0;
-        const gapW  = 4.0;
-        final count = (constraints.maxWidth / (dashW + gapW)).floor();
-        return Row(
-          children: List.generate(
-            count,
-                (_) => Padding(
-              padding: const EdgeInsets.only(right: gapW),
-              child: Container(width: dashW, height: 1, color: color),
-            ),
-          ),
-        );
-      },
     );
   }
 }
@@ -715,7 +570,37 @@ class _MenuTile extends StatelessWidget {
                   ),
                 ),
 
-
+                // ── Badge (if exists) ────────
+                if (item.badge != null)
+                  Positioned(
+                    top: -w * 0.015,
+                    right: -w * 0.015,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: w * 0.018,
+                        vertical:   h * 0.004,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(w * 0.040),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.red.withOpacity(0.3),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        item.badge!,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: w * 0.020,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
             SizedBox(height: h * 0.010),

@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import '../purchase_module/purchase_order_screen.dart';
 import '../purchase_module/grn_screen.dart';
 import '../purchase_module/purchase_invoice_screen.dart';
+import '../screens/dashboard_screen.dart';
+import '../sales_module/sales_home.dart';
+import '../purchase_module/purchase_return_invoice_screen.dart';
 
 // ═══════════════════════════════════════════
 //  COLORS
@@ -20,11 +23,11 @@ class AC {
 // ═══════════════════════════════════════════
 //  ASSET ICON PATHS
 // ═══════════════════════════════════════════
-const String _isPurchases       = 'assets/icons/purchase.png';
-const String _isPurchase        = 'assets/icons/purchase_order.png';
-const String _iPurchaseOrder    = 'assets/icons/order.png';
-const String _iPurchaseGrn = 'assets/icons/purchase_grn.png';
-const String _iPurchaseInvoice  = 'assets/icons/purchase_invoice.png';
+const String _isPurchases            = 'assets/icons/purchase.png';
+const String _iPurchaseOrder         = 'assets/icons/purchase_order.png';
+const String _iPurchaseGrn           = 'assets/icons/purchase_grn.png';
+const String _iPurchaseInvoice       = 'assets/icons/purchase_invoice.png';
+const String _iPurchaseReturnInvoice = 'assets/icons/sales_return_invoice.png';
 
 // ═══════════════════════════════════════════
 //  HOME SCREEN
@@ -41,20 +44,21 @@ class PurchaseHomeScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AC.bgGrey,
       appBar: _buildAppBar(context, w),
+      bottomNavigationBar: buildAppBottomNav(context, 2),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         child: Column(
           children: [
-            SizedBox(height: h * 0.018),
+            SizedBox(height: h * 0.00009),
 
-            // ── Banner Carousel — full width, no side padding ──
+            // ── Banner Carousel ──
             const _BannerCarousel(),
 
             SizedBox(height: h * 0.024),
 
-            // ── Sales Section ────────────────────
+            // ── Purchase Section ──
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: w * 0.04),
+              padding: EdgeInsets.symmetric(horizontal: w * 0.03),
               child: _SectionCard(
                 w: w, h: h,
                 assetIcon: _isPurchases,
@@ -68,11 +72,6 @@ class PurchaseHomeScreen extends StatelessWidget {
                     destination: const PurchaseOrderScreen(),
                   ),
                   _MenuItem(
-                    assetIcon:   _iPurchaseOrder ,
-                    label:       'Order List',
-                    destination: null,
-                  ),
-                  _MenuItem(
                     assetIcon:   _iPurchaseGrn,
                     label:       'Purchase Grn',
                     destination: const GRNScreen(),
@@ -81,6 +80,11 @@ class PurchaseHomeScreen extends StatelessWidget {
                     assetIcon:   _iPurchaseInvoice,
                     label:       'Purchase Invoice',
                     destination: const PurchaseInvoiceScreen(),
+                  ),
+                  _MenuItem(
+                    assetIcon:   _iPurchaseReturnInvoice,
+                    label:       'Purchase Return Invoice',
+                    destination: const PurchaseReturnInvoiceScreen(),
                   ),
                 ],
               ),
@@ -98,8 +102,14 @@ class PurchaseHomeScreen extends StatelessWidget {
       backgroundColor: AC.green,
       elevation: 0,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.white),
-        onPressed: () => Navigator.pop(context),
+        icon: const Icon(Icons.arrow_back_ios_new_rounded,
+            color: Colors.white, size: 20),
+        onPressed: () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const SalesHomeScreen()),
+          );
+        },
       ),
       title: Text(
         'Purchase',
@@ -129,7 +139,7 @@ class _BannerData {
 }
 
 // ═══════════════════════════════════════════
-//  BANNER CAROUSEL  — full screen width
+//  BANNER CAROUSEL
 // ═══════════════════════════════════════════
 class _BannerCarousel extends StatefulWidget {
   const _BannerCarousel();
@@ -177,11 +187,10 @@ class _BannerCarouselState extends State<_BannerCarousel> {
   Widget build(BuildContext context) {
     final w       = MediaQuery.of(context).size.width;
     final h       = MediaQuery.of(context).size.height;
-    // ✅ FIX: full screen width — no horizontal padding, taller height
-    final bannerH = h * 0.26;
+    final bannerH = h * 0.24;
 
     return SizedBox(
-      width:  w,          // full screen width
+      width:  w,
       height: bannerH,
       child: Stack(
         children: [
@@ -233,7 +242,6 @@ class _BannerSlide extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        // ✅ Image fills full width with BoxFit.cover
         Image.asset(data.imagePath, fit: BoxFit.cover, width: w),
         if (hasCaption)
           Container(
@@ -309,6 +317,8 @@ class _MenuItem {
 
 // ═══════════════════════════════════════════
 //  SECTION CARD
+//  FIX: _alwaysVisible = 6 → எல்லா itemsும் காட்டும்
+//       Expand button → properly wired to _toggle()
 // ═══════════════════════════════════════════
 class _SectionCard extends StatefulWidget {
   final double          w, h;
@@ -333,7 +343,10 @@ class _SectionCard extends StatefulWidget {
 
 class _SectionCardState extends State<_SectionCard>
     with SingleTickerProviderStateMixin {
-  static const int _alwaysVisible = 3;
+  // ✅ FIX 1: 6 ஆக வைத்தால் 4 items எல்லாம் always visible ஆகும்
+  //    (உங்களுக்கு 4 items மட்டுமே உள்ளது, எனவே hidden items = 0)
+  static const int _alwaysVisible = 6;
+
   bool _expanded = false;
   late final AnimationController _anim;
   late final Animation<double>   _rotate;
@@ -353,6 +366,7 @@ class _SectionCardState extends State<_SectionCard>
     super.dispose();
   }
 
+  // ✅ FIX 2: _toggle() சரியாக expand/collapse செய்கிறது
   void _toggle() {
     setState(() => _expanded = !_expanded);
     _expanded ? _anim.forward() : _anim.reverse();
@@ -403,7 +417,7 @@ class _SectionCardState extends State<_SectionCard>
               ),
             ),
             padding: EdgeInsets.fromLTRB(
-              w * 0.05, h * 0.018, w * 0.05, h * 0.018,
+              w * 0.05, h * 0.018, w * 0.05, h * 0.010,
             ),
             child: Row(
               children: [
@@ -459,14 +473,12 @@ class _SectionCardState extends State<_SectionCard>
                     ],
                   ),
                 ),
-
-
               ],
             ),
           ),
 
           // ══════════════════════════════════
-          // ALWAYS-VISIBLE FIRST 3 ITEMS
+          // ALWAYS-VISIBLE ITEMS
           // ══════════════════════════════════
           Padding(
             padding: EdgeInsets.fromLTRB(
@@ -499,72 +511,49 @@ class _SectionCardState extends State<_SectionCard>
             ),
 
           // ══════════════════════════════════
-          // SHOW MORE / LESS FOOTER
+          // ✅ FIX 3: EXPAND / COLLAPSE BUTTON
+          //    _hasMore இருந்தால் மட்டும் காட்டும்
           // ══════════════════════════════════
-          if (_hasMore) ...[
-            Container(
-              margin: EdgeInsets.fromLTRB(
-                w * 0.035, 0, w * 0.035, h * 0.016,
-              ),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AC.green.withOpacity(0.08),
-                    AC.green.withOpacity(0.14),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(w * 0.030),
-                border: Border.all(
-                  color: AC.green.withOpacity(0.25), width: 1,
-                ),
-              ),
-              child: InkWell(
-                onTap:        _toggle,
-                borderRadius: BorderRadius.circular(w * 0.030),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: h * 0.013),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      RotationTransition(
-                        turns: _rotate,
-                        child: Container(
-                          width:  w * 0.070,
-                          height: w * 0.070,
-                          decoration: const BoxDecoration(
-                            color: AC.green,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.keyboard_arrow_down_rounded,
-                            color: Colors.white,
-                            size:  w * 0.048,
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: w * 0.025),
-                      Text(
-                        _expanded ? 'Show Less' : 'Show More',
-                        style: TextStyle(
-                          fontSize:   w * 0.038,
-                          fontWeight: FontWeight.w700,
-                          color:      AC.greenDark,
-                        ),
-                      ),
-                      SizedBox(width: w * 0.018),
-                      if (!_expanded)
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: w * 0.022, vertical: h * 0.003,
-                          ),
-                        ),
-                    ],
+          if (_hasMore)
+            GestureDetector(
+              onTap: _toggle,
+              child: Container(
+                width:  double.infinity,
+                padding: EdgeInsets.symmetric(vertical: h * 0.014),
+                decoration: BoxDecoration(
+                  color: AC.green.withOpacity(0.06),
+                  borderRadius: BorderRadius.only(
+                    bottomLeft:  Radius.circular(w * 0.050),
+                    bottomRight: Radius.circular(w * 0.050),
                   ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      _expanded ? 'Show Less' : 'Show More',
+                      style: TextStyle(
+                        color:      AC.green,
+                        fontSize:   w * 0.034,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(width: w * 0.015),
+                    RotationTransition(
+                      turns: _rotate,
+                      child: Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: AC.green,
+                        size:  w * 0.050,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-          ] else
-            SizedBox(height: h * 0.012),
+
+          // Bottom radius padding when no expand button
+          if (!_hasMore) SizedBox(height: h * 0.010),
         ],
       ),
     );
@@ -674,7 +663,7 @@ class _MenuTile extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // ── Icon with badge ──────────────
+            // ── Icon circle ──────────────────
             Stack(
               clipBehavior: Clip.none,
               children: [
@@ -687,7 +676,7 @@ class _MenuTile extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   child: Center(
-                    // Inner solid circle
+                    // Inner gradient circle
                     child: Container(
                       width:  w * 0.130,
                       height: w * 0.130,
@@ -714,8 +703,6 @@ class _MenuTile extends StatelessWidget {
                     ),
                   ),
                 ),
-
-
               ],
             ),
             SizedBox(height: h * 0.010),
