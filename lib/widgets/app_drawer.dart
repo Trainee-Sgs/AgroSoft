@@ -48,9 +48,10 @@ class _AppDrawerState extends State<AppDrawer> {
   bool _masterExpanded      = false;
   bool _transactionExpanded = false;
   bool _cashBankingExpanded = false;
+  bool _settingsExpanded    = false; // ← NEW
 
   // ── Settings state ────────────────────────────────────────────────────────
-  bool _isDarkMode        = false;
+  bool _isDarkMode         = false;
   String _selectedLanguage = 'English';
 
   final List<String> _languages = ['English', 'Tamil', 'Hindi', 'Malayalam'];
@@ -61,37 +62,43 @@ class _AppDrawerState extends State<AppDrawer> {
         _masterExpanded = !_masterExpanded;
         if (_masterExpanded) {
           _salesExpanded = _purchaseExpanded = _transactionExpanded =
-              _reportsExpanded = _cashBankingExpanded = false;
+              _reportsExpanded = _cashBankingExpanded = _settingsExpanded = false;
         }
       } else if (dropdownName == 'sales') {
         _salesExpanded = !_salesExpanded;
         if (_salesExpanded) {
           _masterExpanded = _purchaseExpanded = _transactionExpanded =
-              _reportsExpanded = _cashBankingExpanded = false;
+              _reportsExpanded = _cashBankingExpanded = _settingsExpanded = false;
         }
       } else if (dropdownName == 'purchase') {
         _purchaseExpanded = !_purchaseExpanded;
         if (_purchaseExpanded) {
           _masterExpanded = _salesExpanded = _transactionExpanded =
-              _reportsExpanded = _cashBankingExpanded = false;
+              _reportsExpanded = _cashBankingExpanded = _settingsExpanded = false;
         }
       } else if (dropdownName == 'transaction') {
         _transactionExpanded = !_transactionExpanded;
         if (_transactionExpanded) {
           _masterExpanded = _salesExpanded = _purchaseExpanded =
-              _reportsExpanded = _cashBankingExpanded = false;
+              _reportsExpanded = _cashBankingExpanded = _settingsExpanded = false;
         }
       } else if (dropdownName == 'cashbanking') {
         _cashBankingExpanded = !_cashBankingExpanded;
         if (_cashBankingExpanded) {
           _masterExpanded = _salesExpanded = _purchaseExpanded =
-              _reportsExpanded = _transactionExpanded = false;
+              _reportsExpanded = _transactionExpanded = _settingsExpanded = false;
         }
       } else if (dropdownName == 'reports') {
         _reportsExpanded = !_reportsExpanded;
         if (_reportsExpanded) {
           _masterExpanded = _salesExpanded = _purchaseExpanded =
-              _transactionExpanded = _cashBankingExpanded = false;
+              _transactionExpanded = _cashBankingExpanded = _settingsExpanded = false;
+        }
+      } else if (dropdownName == 'settings') { // ← NEW
+        _settingsExpanded = !_settingsExpanded;
+        if (_settingsExpanded) {
+          _masterExpanded = _salesExpanded = _purchaseExpanded =
+              _transactionExpanded = _cashBankingExpanded = _reportsExpanded = false;
         }
       }
     });
@@ -221,8 +228,8 @@ class _AppDrawerState extends State<AppDrawer> {
                 if (_transactionExpanded) ...[
                   _buildSubItem('Receipt', Icons.receipt_long_rounded),
                   _buildSubItem('Payment', Icons.payment_rounded),
-                  _buildSubItem('Credit', Icons.add_circle_rounded),
-                  _buildSubItem('Debit', Icons.remove_circle_rounded),
+                  _buildSubItem('Credit & note', Icons.add_circle_rounded),
+                  _buildSubItem('Debit & note', Icons.remove_circle_rounded),
                 ],
                 const _DrawerDivider(),
 
@@ -254,18 +261,18 @@ class _AppDrawerState extends State<AppDrawer> {
                 ],
                 const _DrawerDivider(),
 
-                // ── Settings ───────────────────────────────────────────────
-                _buildSectionLabel('Settings'),
-                _buildDarkModeToggle(),
-                _buildLanguageTile(),
-                _buildNavItem(
-                  icon: Icons.help_outline_rounded,
-                  title: 'Help & Support',
-                  onTap: () {
-                    Navigator.pop(context);
-                    _showHelpSupportSheet(context);
-                  },
+                // ── Settings (now a dropdown) ───────────────────────────
+                _buildExpandableItem(
+                  icon: Icons.settings_rounded,
+                  title: 'Settings',
+                  isExpanded: _settingsExpanded,
+                  onTap: () => _toggleDropdown('settings'),
                 ),
+                if (_settingsExpanded) ...[
+                  _buildSettingsDarkModeSubItem(),
+                  _buildSettingsLanguageSubItem(),
+                  _buildSettingsHelpSubItem(),
+                ],
                 const _DrawerDivider(),
               ],
             ),
@@ -297,82 +304,107 @@ class _AppDrawerState extends State<AppDrawer> {
     );
   }
 
-  // ── Settings Widgets ───────────────────────────────────────────────────────
+  // ── Settings Sub-Items (inside dropdown) ──────────────────────────────────
 
-  Widget _buildSectionLabel(String label) {
+  Widget _buildSettingsDarkModeSubItem() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 4),
-      child: Text(
-        label.toUpperCase(),
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          color: AppTheme.primaryGreen.withOpacity(0.7),
-          letterSpacing: 1.2,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDarkModeToggle() {
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
-      leading: Container(
-        width: 38, height: 38,
-        decoration: BoxDecoration(
-          color: AppTheme.primaryGreen.withOpacity(0.12),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(
+      padding: const EdgeInsets.only(left: 20, right: 20),
+      child: ListTile(
+        contentPadding: const EdgeInsets.only(left: 54, right: 4),
+        leading: Icon(
           _isDarkMode ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
-          color: AppTheme.primaryGreen, size: 20,
+          color: AppTheme.primaryGreen,
+          size: 16,
         ),
-      ),
-      title: const Text('Theme',
-          style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 15,
-              color: AppTheme.textDark)),
-      subtitle: Text(
-        _isDarkMode ? 'Dark Mode' : 'Light Mode',
-        style: TextStyle(
-            fontSize: 12, color: AppTheme.textDark.withOpacity(0.5)),
-      ),
-      trailing: Switch.adaptive(
-        value: _isDarkMode,
-        activeColor: AppTheme.primaryGreen,
-        onChanged: (val) => setState(() => _isDarkMode = val),
+        title: Text(
+          _isDarkMode ? 'Dark Mode' : 'Light Mode',
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: AppTheme.textMuted,
+          ),
+        ),
+        trailing: Transform.scale(
+          scale: 0.78,
+          child: Switch.adaptive(
+            value: _isDarkMode,
+            activeColor: AppTheme.primaryGreen,
+            onChanged: (val) => setState(() => _isDarkMode = val),
+          ),
+        ),
+        visualDensity: const VisualDensity(vertical: -2),
       ),
     );
   }
 
-  Widget _buildLanguageTile() {
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
-      leading: Container(
-        width: 38, height: 38,
-        decoration: BoxDecoration(
-          color: AppTheme.primaryGreen.withOpacity(0.12),
-          borderRadius: BorderRadius.circular(10),
+  Widget _buildSettingsLanguageSubItem() {
+    return Padding(
+      padding: const EdgeInsets.only(left: 74, right: 20),
+      child: InkWell(
+        onTap: () => _showLanguagePicker(),
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 11),
+          child: Row(children: [
+            const Icon(Icons.language_rounded,
+                color: AppTheme.primaryGreen, size: 16),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Language',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: AppTheme.textMuted,
+                ),
+              ),
+            ),
+            Text(
+              _selectedLanguage,
+              style: TextStyle(
+                fontSize: 12,
+                color: AppTheme.textDark.withOpacity(0.45),
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(Icons.keyboard_arrow_right_rounded,
+                color: Colors.grey.shade400, size: 16),
+          ]),
         ),
-        child: const Icon(Icons.language_rounded,
-            color: AppTheme.primaryGreen, size: 20),
       ),
-      title: const Text('Language',
-          style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 15,
-              color: AppTheme.textDark)),
-      subtitle: Text(
-        _selectedLanguage,
-        style: TextStyle(
-            fontSize: 12, color: AppTheme.textDark.withOpacity(0.5)),
-      ),
-      trailing: Icon(Icons.keyboard_arrow_right_rounded,
-          color: Colors.grey.shade400),
-      onTap: () => _showLanguagePicker(),
     );
   }
+
+  Widget _buildSettingsHelpSubItem() {
+    return Padding(
+      padding: const EdgeInsets.only(left: 74, right: 20),
+      child: InkWell(
+        onTap: () {
+          Navigator.pop(context);
+          _showHelpSupportSheet(context);
+        },
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 11),
+          child: Row(children: [
+            const Icon(Icons.help_outline_rounded,
+                color: AppTheme.primaryGreen, size: 16),
+            const SizedBox(width: 12),
+            const Text(
+              'Help & Support',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: AppTheme.textMuted,
+              ),
+            ),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  // ── Language Picker ────────────────────────────────────────────────────────
 
   void _showLanguagePicker() {
     showModalBottomSheet(
@@ -431,6 +463,8 @@ class _AppDrawerState extends State<AppDrawer> {
       ),
     );
   }
+
+  // ── Help & Support Sheet ───────────────────────────────────────────────────
 
   void _showHelpSupportSheet(BuildContext context) {
     showModalBottomSheet(
@@ -517,7 +551,7 @@ class _AppDrawerState extends State<AppDrawer> {
     );
   }
 
-  // ── Existing Widgets ───────────────────────────────────────────────────────
+  // ── Nav / Expandable / Sub Widgets ─────────────────────────────────────────
 
   Widget _buildNavItem({
     required IconData icon,
@@ -635,6 +669,8 @@ class _AppDrawerState extends State<AppDrawer> {
       ),
     );
   }
+
+  // ── Logout Dialog ──────────────────────────────────────────────────────────
 
   void _showLogoutDialog(BuildContext context) {
     showDialog(

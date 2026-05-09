@@ -25,9 +25,11 @@ class _C {
 // ══════════════════════════════════════════════════════════════════════════════
 enum GstType      { cgstSgst, igst }
 enum TaxInclusion { exclude, include }
+enum OrderType    { wholesale, retail }   // ← NEW
 
 class OrderItem {
   String       product;
+  String       batch;
   double       price;
   int          quantity;
   double       discountValue;
@@ -37,6 +39,7 @@ class OrderItem {
 
   OrderItem({
     required this.product,
+    required this.batch,
     required this.price,
     required this.quantity,
     this.discountValue     = 0,
@@ -70,6 +73,7 @@ class SavedQuotation {
   final DateTime        dueDate;
   final GstType         gstType;
   final TaxInclusion    taxInclusion;
+  final OrderType       orderType;         // ← NEW
   final List<OrderItem> items;
 
   SavedQuotation({
@@ -82,6 +86,7 @@ class SavedQuotation {
     required this.dueDate,
     required this.gstType,
     required this.taxInclusion,
+    required this.orderType,               // ← NEW
     required this.items,
   });
 
@@ -179,6 +184,7 @@ class AgroProducts {
 // ══════════════════════════════════════════════════════════════════════════════
 class _InlineItemForm {
   final productCtrl = TextEditingController();
+  final batchCtrl   = TextEditingController();
   final priceCtrl   = TextEditingController();
   final qtyCtrl     = TextEditingController(text: '1');
   final discCtrl    = TextEditingController();
@@ -211,6 +217,7 @@ class _InlineItemForm {
 
   OrderItem toOrderItem(TaxInclusion taxType) => OrderItem(
     product:           productCtrl.text.trim(),
+    batch:             batchCtrl.text.trim(),
     price:             double.tryParse(priceCtrl.text) ?? 0,
     quantity:          int.tryParse(qtyCtrl.text) ?? 1,
     discountValue:     double.tryParse(discCtrl.text) ?? 0,
@@ -252,6 +259,7 @@ class _SalesReturnInvoiceScreenState extends State<SalesReturnInvoiceScreen>
 
   GstType      _gstType      = GstType.cgstSgst;
   TaxInclusion _taxInclusion = TaxInclusion.exclude;
+  OrderType    _orderType    = OrderType.wholesale;   // ← NEW
   DateTime     _selectedDate = DateTime.now();
   DateTime     _dueDate      = DateTime.now().add(const Duration(days: 1));
 
@@ -341,6 +349,7 @@ class _SalesReturnInvoiceScreenState extends State<SalesReturnInvoiceScreen>
       dueDate:         _dueDate,
       gstType:         _gstType,
       taxInclusion:    _taxInclusion,
+      orderType:       _orderType,               // ← NEW
       items:           items,
     );
 
@@ -357,6 +366,7 @@ class _SalesReturnInvoiceScreenState extends State<SalesReturnInvoiceScreen>
       _dueDate      = DateTime.now().add(const Duration(days: 1));
       _gstType      = GstType.cgstSgst;
       _taxInclusion = TaxInclusion.exclude;
+      _orderType    = OrderType.wholesale;        // ← NEW reset
       _openSection  = _kTypes;
       _showViewQuotations = true;
       _addNewForm();
@@ -576,25 +586,44 @@ class _SalesReturnInvoiceScreenState extends State<SalesReturnInvoiceScreen>
   }
 
   // ── TYPES BODY ─────────────────────────────────────────────────────────────
-  Widget _buildTypesBody() => Row(children: [
-    Expanded(child: _TypeDropdown<GstType>(
-      label: 'GST Type', value: _gstType,
-      items: const [
-        DropdownMenuItem(value: GstType.cgstSgst, child: Text('CGST/SGST')),
-        DropdownMenuItem(value: GstType.igst,     child: Text('IGST')),
-      ],
-      onChanged: (v) { if (v != null) setState(() => _gstType = v); },
-    )),
-    const SizedBox(width: 12),
-    Expanded(child: _TypeDropdown<TaxInclusion>(
-      label: 'Tax Inclusion', value: _taxInclusion,
-      items: const [
-        DropdownMenuItem(value: TaxInclusion.exclude, child: Text('Exclude Tax')),
-        DropdownMenuItem(value: TaxInclusion.include, child: Text('Include Tax')),
-      ],
-      onChanged: (v) { if (v != null) setState(() => _taxInclusion = v); },
-    )),
-  ]);
+  // Order Type → full width (row 1)
+  // GST Type + Tax Inclusion → side by side (row 2)
+  Widget _buildTypesBody() => Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      // ── Row 1: Order Type — full width ──────────────────────────────────
+      _TypeDropdown<OrderType>(
+        label: 'Order Type',
+        value: _orderType,
+        items: const [
+          DropdownMenuItem(value: OrderType.wholesale, child: Text('Wholesale')),
+          DropdownMenuItem(value: OrderType.retail,    child: Text('Retail')),
+        ],
+        onChanged: (v) { if (v != null) setState(() => _orderType = v); },
+      ),
+      const SizedBox(height: 12),
+      // ── Row 2: GST Type + Tax Inclusion ─────────────────────────────────
+      Row(children: [
+        Expanded(child: _TypeDropdown<GstType>(
+          label: 'GST Type', value: _gstType,
+          items: const [
+            DropdownMenuItem(value: GstType.cgstSgst, child: Text('CGST/SGST')),
+            DropdownMenuItem(value: GstType.igst,     child: Text('IGST')),
+          ],
+          onChanged: (v) { if (v != null) setState(() => _gstType = v); },
+        )),
+        const SizedBox(width: 12),
+        Expanded(child: _TypeDropdown<TaxInclusion>(
+          label: 'Tax Inclusion', value: _taxInclusion,
+          items: const [
+            DropdownMenuItem(value: TaxInclusion.exclude, child: Text('Exclude Tax')),
+            DropdownMenuItem(value: TaxInclusion.include, child: Text('Include Tax')),
+          ],
+          onChanged: (v) { if (v != null) setState(() => _taxInclusion = v); },
+        )),
+      ]),
+    ],
+  );
 
   // ── CUSTOMER BODY ──────────────────────────────────────────────────────────
   Widget _buildCustomerBody() => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -622,10 +651,6 @@ class _SalesReturnInvoiceScreenState extends State<SalesReturnInvoiceScreen>
       ])),
     ]),
     const SizedBox(height: 14),
-    Row(children: [
-      const _FieldLabel(label: 'Due Date'), const SizedBox(width: 12),
-      Expanded(child: _datePicker(true)),
-    ]),
   ]);
 
   Widget _datePicker(bool isDue) => GestureDetector(
@@ -638,7 +663,7 @@ class _SalesReturnInvoiceScreenState extends State<SalesReturnInvoiceScreen>
         Icon(isDue ? Icons.event_rounded : Icons.calendar_month_rounded, color: _C.primary, size: 18),
         const SizedBox(width: 8),
         Text(DateFormat('dd-MM-yyyy').format(isDue ? _dueDate : _selectedDate),
-            style: const TextStyle(color: _C.textDark, fontSize: 13, fontWeight: FontWeight.w600)),
+            style: const TextStyle(color: _C.textDark, fontSize: 10, fontWeight: FontWeight.w600)),
         const Spacer(),
         const Icon(Icons.keyboard_arrow_down_rounded, color: _C.textMid, size: 18),
       ]),
@@ -791,6 +816,23 @@ class _SalesReturnInvoiceScreenState extends State<SalesReturnInvoiceScreen>
               ],
 
               const SizedBox(height: 12),
+              const Text('Batch No',
+                  style: TextStyle(color: _C.textMid, fontSize: 12, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 6),
+              TextField(
+                controller: form.batchCtrl,
+                style: const TextStyle(color: _C.textDark, fontSize: 14, fontWeight: FontWeight.w500),
+                decoration: InputDecoration(
+                  hintText: 'Enter batch number',
+                  hintStyle: const TextStyle(color: _C.textLight, fontSize: 13),
+                  filled: true, fillColor: _C.surface,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: _C.border)),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: _C.border)),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: _C.primary, width: 1.5)),
+                ),
+              ),
+              const SizedBox(height: 12),
 
               // Price
               Row(children: [
@@ -852,12 +894,23 @@ class _SalesReturnInvoiceScreenState extends State<SalesReturnInvoiceScreen>
               const SizedBox(height: 12),
 
               // Total preview
-              Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-                const Text('Total  ',
-                    style: TextStyle(color: _C.textMid, fontSize: 13, fontWeight: FontWeight.w500)),
-                Text('Rs. ${form.previewTotal.toStringAsFixed(2)}',
-                    style: const TextStyle(color: _C.textDark, fontSize: 16, fontWeight: FontWeight.w800)),
-              ]),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: _C.primaryLt, borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: _C.primary.withOpacity(0.2)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Item Total', style: TextStyle(color: _C.primary,
+                        fontWeight: FontWeight.w600, fontSize: 13)),
+                    Text('₹${form.previewTotal.toStringAsFixed(2)}',
+                        style: const TextStyle(color: _C.primary,
+                            fontWeight: FontWeight.w800, fontSize: 16)),
+                  ],
+                ),
+              ),
             ]),
           ),
         ]),
@@ -1048,6 +1101,18 @@ class _SalesReturnInvoiceScreenState extends State<SalesReturnInvoiceScreen>
                         Text('Ref: ${q.reference}',
                             style: const TextStyle(color: _C.textMid, fontSize: 12, fontWeight: FontWeight.w500)),
                       ],
+                      const SizedBox(height: 4),
+                      // ── Order type badge ─────────────────────────────────
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: _C.primaryLt, borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          q.orderType == OrderType.wholesale ? 'Wholesale' : 'Retail',
+                          style: const TextStyle(color: _C.primary, fontSize: 10, fontWeight: FontWeight.w700),
+                        ),
+                      ),
                     ]),
                   ),
                   const SizedBox(width: 12),
@@ -1083,7 +1148,7 @@ class _SalesReturnInvoiceScreenState extends State<SalesReturnInvoiceScreen>
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// DETAIL BOTTOM SHEET — ALL saved fields displayed
+// DETAIL BOTTOM SHEET
 // ══════════════════════════════════════════════════════════════════════════════
 class _QuotationDetailSheet extends StatelessWidget {
   final SavedQuotation quotation;
@@ -1110,7 +1175,6 @@ class _QuotationDetailSheet extends StatelessWidget {
                 decoration: BoxDecoration(color: _C.border, borderRadius: BorderRadius.circular(4))),
             const SizedBox(height: 6),
 
-            // ── Green gradient summary header ─────────────────────────────
             Container(
               margin: const EdgeInsets.fromLTRB(16, 6, 16, 0),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -1145,13 +1209,11 @@ class _QuotationDetailSheet extends StatelessWidget {
               ]),
             ),
 
-            // ── Scrollable body ───────────────────────────────────────────
             Expanded(child: ListView(
               controller: ctrl,
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
               children: [
 
-                // ── CUSTOMER DETAILS ──────────────────────────────────────
                 _sectionLabel('CUSTOMER DETAILS'),
                 const SizedBox(height: 8),
                 _infoCard([
@@ -1163,16 +1225,19 @@ class _QuotationDetailSheet extends StatelessWidget {
                 ]),
                 const SizedBox(height: 14),
 
-                // ── ORDER INFO ────────────────────────────────────────────
                 _sectionLabel('ORDER INFO'),
                 const SizedBox(height: 8),
                 _infoCard([
+                  // ── Order Type shown in detail sheet ──────────────────
+                  _DetailRow(
+                    label: 'Order Type',
+                    value: quotation.orderType == OrderType.wholesale ? 'Wholesale' : 'Retail',
+                    bold: true,
+                  ),
                   if (quotation.reference.isNotEmpty)
                     _DetailRow(label: 'Reference', value: quotation.reference, bold: true),
                   _DetailRow(label: 'Date',
                       value: DateFormat('dd-MM-yyyy').format(quotation.date), bold: true),
-                  _DetailRow(label: 'Due Date',
-                      value: DateFormat('dd-MM-yyyy').format(quotation.dueDate), bold: true),
                   _DetailRow(label: 'GST Type',
                       value: quotation.gstType == GstType.cgstSgst ? 'CGST/SGST' : 'IGST', bold: true),
                   _DetailRow(label: 'Tax',
@@ -1181,7 +1246,6 @@ class _QuotationDetailSheet extends StatelessWidget {
                 ]),
                 const SizedBox(height: 14),
 
-                // ── ITEMS ─────────────────────────────────────────────────
                 _sectionLabel('ITEMS (${quotation.items.length})'),
                 const SizedBox(height: 8),
                 Container(
@@ -1198,7 +1262,6 @@ class _QuotationDetailSheet extends StatelessWidget {
                 ),
                 const SizedBox(height: 14),
 
-                // ── TOTAL ─────────────────────────────────────────────────
                 _sectionLabel('TOTAL'),
                 const SizedBox(height: 8),
                 Container(
@@ -1233,7 +1296,6 @@ class _QuotationDetailSheet extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
-                // ── DOWNLOAD + SHARE ──────────────────────────────────────
                 Row(children: [
                   Expanded(
                     child: OutlinedButton.icon(

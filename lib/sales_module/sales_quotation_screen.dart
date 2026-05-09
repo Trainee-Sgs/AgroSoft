@@ -1288,22 +1288,22 @@ class _SalesQuotationScreenState extends State<SalesQuotationScreen>
                       ],
                     ),
                     const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        const Text('Total  ',
-                            style: TextStyle(
-                                color: _C.textMid,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500)),
-                        Text(
-                          'Rs. ${form.previewTotal.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                              color: _C.textDark,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800),
-                        ),
-                      ],
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: _C.primaryLt, borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: _C.primary.withOpacity(0.2)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Item Total', style: TextStyle(color: _C.primary,
+                              fontWeight: FontWeight.w600, fontSize: 13)),
+                          Text('₹${form.previewTotal.toStringAsFixed(2)}',
+                              style: const TextStyle(color: _C.primary,
+                                  fontWeight: FontWeight.w800, fontSize: 16)),
+                        ],
+                      ),
                     ),
                   ],
                 ),

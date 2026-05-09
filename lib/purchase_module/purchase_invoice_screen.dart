@@ -64,7 +64,6 @@ class SupplierNames {
     'VELMURUGAN FARM ENTERPRISE','VIJAY AGRO DISTRIBUTORS','VIJAYALAKSHMI AGRO CENTER',
     'VINAYAGA AGRO TRADERS','YUVAN FARM ENTERPRISE','ZONAL AGRO SUPPLIERS',
   ];
-
   static List<String> search(String query) {
     if (query.trim().isEmpty) return [];
     final q = query.toUpperCase().trim();
@@ -283,9 +282,7 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
     with TickerProviderStateMixin {
 
   bool    _showViewOrders = false;
-
-  // ── Accordion: first card open by default ─────────────────────────────
-  String? _openSection = _kTypes;
+  String? _openSection    = _kTypes;
 
   final _supplierNameCtrl    = TextEditingController();
   final _supplierAddressCtrl = TextEditingController();
@@ -313,7 +310,6 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
     super.dispose();
   }
 
-  // ── Accordion toggle — one open at a time ──────────────────────────────
   void _toggleSection(String key) {
     HapticFeedback.lightImpact();
     setState(() => _openSection = _openSection == key ? null : key);
@@ -323,8 +319,6 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
   double get _discTotal  => _items.fold(0, (s, i) => s + i.discountAmount);
   double get _taxTotal   => _items.fold(0, (s, i) => s + i.taxAmount);
   double get _grandTotal => _items.fold(0, (s, i) => s + i.grandTotal);
-
-  get _transferType  => null;
 
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
@@ -344,7 +338,7 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
     if (picked != null) setState(() => _selectedDate = picked);
   }
 
-  // ── Bottom Sheet Item Picker ───────────────────────────────────────────
+  // ── Item Bottom Sheet ──────────────────────────────────────────────────────
   void _showItemSheet({OrderItem? existing, int? editIndex}) {
     final productCtrl = TextEditingController(text: existing?.product ?? '');
     final batchCtrl   = TextEditingController(text: existing?.batch ?? '');
@@ -361,8 +355,8 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
     TaxType       selectedTaxType  = existing?.taxType ?? _globalTaxType;
     bool          discIsPercent    = existing?.discountIsPercent ?? true;
     double        previewTotal     = existing?.grandTotal ?? 0;
-    _ProductInfo? selectedProduct  = existing != null
-        ? AgroProducts.getInfo(existing.product) : null;
+    _ProductInfo? selectedProduct  =
+    existing != null ? AgroProducts.getInfo(existing.product) : null;
     List<String>  suggestions      = [];
 
     void recalc(StateSetter ss) {
@@ -374,8 +368,7 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
       final disc  = discIsPercent ? sub * dv / 100 : dv;
       final after = sub - disc;
       final total = selectedTaxType == TaxType.inclusive
-          ? after
-          : after + after * t / 100;
+          ? after : after + after * t / 100;
       ss(() => previewTotal = total);
     }
 
@@ -396,7 +389,7 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
             ),
             child: Column(
               children: [
-                // ── Sheet Header ──────────────────────────────────────
+                // ── Sheet Header ──────────────────────────────────────────
                 Container(
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
@@ -448,7 +441,7 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
                   ),
                 ),
 
-                // ── Scrollable Fields ─────────────────────────────────
+                // ── Scrollable Fields ─────────────────────────────────────
                 Expanded(
                   child: ListView(
                     controller: scrollCtrl,
@@ -468,138 +461,40 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
                           ss(() => suggestions = AgroProducts.search(val));
                           recalc(ss);
                         },
-                        decoration: InputDecoration(
-                          prefixIcon: const Icon(Icons.inventory_2_rounded,
-                              color: _C.primary, size: 18),
-                          suffixIcon: productCtrl.text.isNotEmpty
-                              ? IconButton(
-                            icon: const Icon(Icons.clear,
-                                color: _C.textLight, size: 18),
-                            onPressed: () {
-                              productCtrl.clear();
-                              ss(() => suggestions = []);
-                            },
-                          ) : null,
-                          hintText: 'Type to search product…',
-                          hintStyle: const TextStyle(
-                              color: _C.textLight, fontSize: 12),
-                          filled: true, fillColor: _C.bg,
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 12),
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: _C.border)),
-                          enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: _C.border)),
-                          focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                  color: _C.primary, width: 1.5)),
-                        ),
+                        decoration: _inputDec(hint: 'Type to search product…'),
                       ),
 
                       // Suggestions
                       if (suggestions.isNotEmpty) ...[
                         const SizedBox(height: 4),
-                        Container(
-                          constraints: const BoxConstraints(maxHeight: 180),
-                          decoration: BoxDecoration(
-                            color:_C.primaryLt,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                                color: _C.primary.withOpacity(0.25)),
-                            boxShadow: [BoxShadow(
-                                color: _C.primary.withOpacity(0.08),
-                                blurRadius: 16,
-                                offset: const Offset(0, 4))],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(14),
-                            child: ListView.separated(
-                              shrinkWrap: true,
-                              padding: EdgeInsets.zero,
-                              itemCount: suggestions.length,
-                              separatorBuilder: (_, __) =>
-                              const Divider(height: 1, color: _C.border),
-                              itemBuilder: (_, i) {
-                                final s     = suggestions[i];
-                                final query = productCtrl.text
-                                    .toUpperCase().trim();
-                                final idx   = s.indexOf(query);
-                                return InkWell(
-                                  onTap: () {
-                                    productCtrl.text = s;
-                                    productCtrl.selection =
-                                        TextSelection.fromPosition(
-                                            TextPosition(offset: s.length));
-                                    ss(() {
-                                      suggestions     = [];
-                                      selectedProduct = AgroProducts.getInfo(s);
-                                    });
-                                    recalc(ss);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 14, vertical: 10),
-                                    child: Row(
-                                      children: [
-                                        const Icon(Icons.eco_rounded,
-                                            color: _C.primary, size: 14),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: idx >= 0 && query.isNotEmpty
-                                              ? RichText(
-                                            text: TextSpan(children: [
-                                              TextSpan(
-                                                text: s.substring(0, idx),
-                                                style: const TextStyle(
-                                                    color: _C.primaryDk,
-                                                    fontSize: 13,
-                                                    fontWeight: FontWeight.w500),
-                                              ),
-                                              TextSpan(
-                                                text: s.substring(
-                                                    idx, idx + query.length),
-                                                style: const TextStyle(
-                                                    color: _C.primary,
-                                                    fontSize: 13,
-                                                    fontWeight: FontWeight.w800,
-                                                    backgroundColor:
-                                                    Color(0xFFE8F5ED)),
-                                              ),
-                                              TextSpan(
-                                                text: s.substring(
-                                                    idx + query.length),
-                                                style: const TextStyle(
-                                                    color: _C.primaryDk,
-                                                    fontSize: 13,
-                                                    fontWeight: FontWeight.w500),
-                                              ),
-                                            ]),
-                                          )
-                                              : Text(s,
-                                              style: const TextStyle(
-                                                  color: _C.primaryDk,
-                                                  fontSize: 13,
-                                                  fontWeight: FontWeight.w500)),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
+                        _suggestionBox(
+                          items: suggestions,
+                          queryText: productCtrl.text,
+                          icon: Icons.eco_rounded,
+                          onSelect: (s) {
+                            productCtrl.text = s;
+                            productCtrl.selection = TextSelection.fromPosition(
+                                TextPosition(offset: s.length));
+                            ss(() {
+                              suggestions    = [];
+                              selectedProduct = AgroProducts.getInfo(s);
+                            });
+                            recalc(ss);
+                          },
                         ),
                       ],
                       const SizedBox(height: 14),
 
                       // Batch No
-                      _SheetField(
-                        label: 'Batch No',
+                      const Text('Batch No',
+                          style: TextStyle(color: _C.textMid, fontSize: 12,
+                              fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 6),
+                      TextField(
                         controller: batchCtrl,
-                        icon: Icons.qr_code_rounded,
+                        style: const TextStyle(color: _C.textDark, fontSize: 14,
+                            fontWeight: FontWeight.w500),
+                        decoration: _inputDec(hint: 'Enter batch number'),
                       ),
                       const SizedBox(height: 14),
 
@@ -617,23 +512,8 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
                                           fontWeight: FontWeight.w600)),
                                   if (selectedProduct != null) ...[
                                     const SizedBox(width: 6),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 7, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFFFF3CD),
-                                        borderRadius: BorderRadius.circular(6),
-                                        border: Border.all(
-                                            color: _C.gold.withOpacity(0.5)),
-                                      ),
-                                      child: Text(
-                                        'Old: ₹${selectedProduct!.oldPrice.toStringAsFixed(0)}',
-                                        style: const TextStyle(
-                                            color: _C.gold,
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w700),
-                                      ),
-                                    ),
+                                    _badgeGold(
+                                        'Old: ₹${selectedProduct!.oldPrice.toStringAsFixed(0)}'),
                                   ],
                                 ]),
                                 const SizedBox(height: 6),
@@ -643,26 +523,7 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
                                   onChanged: (_) => recalc(ss),
                                   style: const TextStyle(color: _C.textDark,
                                       fontSize: 14, fontWeight: FontWeight.w500),
-                                  decoration: InputDecoration(
-                                    prefixIcon: const Icon(
-                                        Icons.currency_rupee_rounded,
-                                        color: _C.primary, size: 18),
-                                    filled: true, fillColor: _C.bg,
-                                    contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 12, vertical: 12),
-                                    border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide:
-                                        const BorderSide(color: _C.border)),
-                                    enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide:
-                                        const BorderSide(color: _C.border)),
-                                    focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: const BorderSide(
-                                            color: _C.primary, width: 1.5)),
-                                  ),
+                                  decoration: _inputDec(),
                                 ),
                               ],
                             ),
@@ -679,23 +540,8 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
                                           fontWeight: FontWeight.w600)),
                                   if (selectedProduct != null) ...[
                                     const SizedBox(width: 6),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 7, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: _C.primaryLt,
-                                        borderRadius: BorderRadius.circular(6),
-                                        border: Border.all(
-                                            color: _C.primary.withOpacity(0.35)),
-                                      ),
-                                      child: Text(
-                                        'Stock: ${selectedProduct!.currentStock}',
-                                        style: const TextStyle(
-                                            color: _C.primary,
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w700),
-                                      ),
-                                    ),
+                                    _badgeGreen(
+                                        'Stock: ${selectedProduct!.currentStock}'),
                                   ],
                                 ]),
                                 const SizedBox(height: 6),
@@ -705,25 +551,7 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
                                   onChanged: (_) => recalc(ss),
                                   style: const TextStyle(color: _C.textDark,
                                       fontSize: 14, fontWeight: FontWeight.w500),
-                                  decoration: InputDecoration(
-                                    prefixIcon: const Icon(Icons.layers_rounded,
-                                        color: _C.primary, size: 18),
-                                    filled: true, fillColor: _C.bg,
-                                    contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 12, vertical: 12),
-                                    border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide:
-                                        const BorderSide(color: _C.border)),
-                                    enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide:
-                                        const BorderSide(color: _C.border)),
-                                    focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: const BorderSide(
-                                            color: _C.primary, width: 1.5)),
-                                  ),
+                                  decoration: _inputDec(),
                                 ),
                               ],
                             ),
@@ -732,52 +560,44 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
                       ),
                       const SizedBox(height: 14),
 
-                      // ── Discount & Tax in a single row ────────────────
+                      // Discount & Tax
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // ── Discount (left half) ──────────────────────
                           Expanded(
+                            flex: 3,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text('Discount',
-                                    style: TextStyle(
-                                        color: _C.textMid,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600)),
+                                    style: TextStyle(color: _C.textMid,
+                                        fontSize: 12, fontWeight: FontWeight.w600)),
                                 const SizedBox(height: 6),
                                 Row(
                                   children: [
-                                    // % / ₹ toggle
                                     Container(
                                       height: 46,
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 4),
+                                          horizontal: 6),
                                       decoration: BoxDecoration(
                                         color: _C.bg,
-                                        borderRadius:
-                                        BorderRadius.circular(12),
-                                        border:
-                                        Border.all(color: _C.border),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(color: _C.border),
                                       ),
                                       child: DropdownButtonHideUnderline(
                                         child: DropdownButton<bool>(
                                           value: discIsPercent,
                                           dropdownColor: _C.surface,
                                           icon: const Icon(
-                                              Icons
-                                                  .keyboard_arrow_down_rounded,
-                                              color: _C.primary,
-                                              size: 14),
+                                              Icons.keyboard_arrow_down_rounded,
+                                              color: _C.primary, size: 14),
                                           items: const [
                                             DropdownMenuItem(
                                               value: true,
                                               child: Text('%',
                                                   style: TextStyle(
                                                       color: _C.primary,
-                                                      fontWeight:
-                                                      FontWeight.w800,
+                                                      fontWeight: FontWeight.w800,
                                                       fontSize: 14)),
                                             ),
                                             DropdownMenuItem(
@@ -785,15 +605,13 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
                                               child: Text('₹',
                                                   style: TextStyle(
                                                       color: _C.primary,
-                                                      fontWeight:
-                                                      FontWeight.w800,
+                                                      fontWeight: FontWeight.w800,
                                                       fontSize: 14)),
                                             ),
                                           ],
                                           onChanged: (val) {
                                             if (val != null) {
-                                              ss(() =>
-                                              discIsPercent = val);
+                                              ss(() => discIsPercent = val);
                                               recalc(ss);
                                             }
                                           },
@@ -801,50 +619,16 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
                                       ),
                                     ),
                                     const SizedBox(width: 6),
-                                    // Discount value field
                                     Expanded(
                                       child: TextField(
                                         controller: discCtrl,
-                                        keyboardType:
-                                        TextInputType.number,
+                                        keyboardType: TextInputType.number,
                                         onChanged: (_) => recalc(ss),
                                         style: const TextStyle(
-                                            color: _C.textDark,
-                                            fontSize: 13,
+                                            color: _C.textDark, fontSize: 14,
                                             fontWeight: FontWeight.w500),
-                                        decoration: InputDecoration(
-                                          hintText: discIsPercent
-                                              ? '0 %'
-                                              : '0 ₹',
-                                          hintStyle: const TextStyle(
-                                              color: _C.textLight,
-                                              fontSize: 11),
-                                          filled: true,
-                                          fillColor: _C.bg,
-                                          contentPadding:
-                                          const EdgeInsets.symmetric(
-                                              horizontal: 10,
-                                              vertical: 12),
-                                          border: OutlineInputBorder(
-                                              borderRadius:
-                                              BorderRadius.circular(
-                                                  12),
-                                              borderSide: const BorderSide(
-                                                  color: _C.border)),
-                                          enabledBorder: OutlineInputBorder(
-                                              borderRadius:
-                                              BorderRadius.circular(
-                                                  12),
-                                              borderSide: const BorderSide(
-                                                  color: _C.border)),
-                                          focusedBorder: OutlineInputBorder(
-                                              borderRadius:
-                                              BorderRadius.circular(
-                                                  12),
-                                              borderSide: const BorderSide(
-                                                  color: _C.primary,
-                                                  width: 1.5)),
-                                        ),
+                                        decoration: _inputDec(
+                                            hint: discIsPercent ? '0 %' : '0 ₹'),
                                       ),
                                     ),
                                   ],
@@ -852,66 +636,30 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
                               ],
                             ),
                           ),
-
-                          const SizedBox(width: 12),
-
-                          // ── Tax % (right half) ────────────────────────
+                          const SizedBox(width: 10),
                           Expanded(
+                            flex: 2,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text('Tax (%)',
-                                    style: TextStyle(
-                                        color: _C.textMid,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600)),
+                                    style: TextStyle(color: _C.textMid,
+                                        fontSize: 12, fontWeight: FontWeight.w600)),
                                 const SizedBox(height: 6),
                                 TextField(
                                   controller: taxCtrl,
                                   keyboardType: TextInputType.number,
                                   onChanged: (_) => recalc(ss),
-                                  style: const TextStyle(
-                                      color: _C.textDark,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500),
-                                  decoration: InputDecoration(
-                                    prefixIcon: const Icon(
-                                        Icons.percent_rounded,
-                                        color: _C.primary,
-                                        size: 16),
-                                    hintText: '0',
-                                    hintStyle: const TextStyle(
-                                        color: _C.textLight, fontSize: 11),
-                                    filled: true,
-                                    fillColor: _C.bg,
-                                    contentPadding:
-                                    const EdgeInsets.symmetric(
-                                        horizontal: 10, vertical: 12),
-                                    border: OutlineInputBorder(
-                                        borderRadius:
-                                        BorderRadius.circular(12),
-                                        borderSide: const BorderSide(
-                                            color: _C.border)),
-                                    enabledBorder: OutlineInputBorder(
-                                        borderRadius:
-                                        BorderRadius.circular(12),
-                                        borderSide: const BorderSide(
-                                            color: _C.border)),
-                                    focusedBorder: OutlineInputBorder(
-                                        borderRadius:
-                                        BorderRadius.circular(12),
-                                        borderSide: const BorderSide(
-                                            color: _C.primary, width: 1.5)),
-                                  ),
+                                  style: const TextStyle(color: _C.textDark,
+                                      fontSize: 14, fontWeight: FontWeight.w500),
+                                  decoration: _inputDec(hint: '0'),
                                 ),
                               ],
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
-
-
+                      const SizedBox(height: 16),
 
                       // Item total preview
                       Container(
@@ -920,38 +668,33 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
                         decoration: BoxDecoration(
                           color: _C.primaryLt,
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                              color: _C.primary.withOpacity(0.2)),
+                          border: Border.all(color: _C.primary.withOpacity(0.2)),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const Text('Item Total',
                                 style: TextStyle(color: _C.primary,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14)),
+                                    fontWeight: FontWeight.w600, fontSize: 14)),
                             Text('₹${previewTotal.toStringAsFixed(2)}',
                                 style: const TextStyle(color: _C.primary,
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 18)),
+                                    fontWeight: FontWeight.w800, fontSize: 18)),
                           ],
                         ),
                       ),
                       const SizedBox(height: 20),
 
-                      // Buttons
+                      // Cancel / Add buttons
                       Row(
                         children: [
                           Expanded(
                             child: OutlinedButton(
                               onPressed: () => Navigator.pop(ctx),
                               style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 14),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
                                 side: const BorderSide(color: _C.border),
                                 shape: RoundedRectangleBorder(
-                                    borderRadius:
-                                    BorderRadius.circular(14)),
+                                    borderRadius: BorderRadius.circular(14)),
                               ),
                               child: const Text('Cancel',
                                   style: TextStyle(color: _C.textMid,
@@ -986,26 +729,21 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: _C.primary,
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 14),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
-                                    borderRadius:
-                                    BorderRadius.circular(14)),
+                                    borderRadius: BorderRadius.circular(14)),
                               ),
                               child: Text(
                                 editIndex != null ? 'Update' : 'Add Item',
                                 style: const TextStyle(color: Colors.white,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 15),
+                                    fontWeight: FontWeight.w700, fontSize: 15),
                               ),
                             ),
                           ),
                         ],
                       ),
-                      SizedBox(
-                          height:
-                          MediaQuery.of(ctx).viewInsets.bottom + 16),
+                      SizedBox(height: MediaQuery.of(ctx).viewInsets.bottom + 16),
                     ],
                   ),
                 ),
@@ -1017,21 +755,116 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
     );
   }
 
-  void _deleteSelected() {
-    if (_selectedIndex == null) {
-      _showSnack('Select an item to delete', _C.red);
-      return;
-    }
-    setState(() {
-      _items.removeAt(_selectedIndex!);
-      _selectedIndex = null;
-    });
+  // ── Shared input decoration ────────────────────────────────────────────────
+  static InputDecoration _inputDec({String hint = ''}) => InputDecoration(
+    hintText: hint,
+    hintStyle: const TextStyle(color: _C.textLight, fontSize: 12),
+    filled: true, fillColor: _C.bg,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+    border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: _C.border)),
+    enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: _C.border)),
+    focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: _C.primary, width: 1.5)),
+  );
+
+  // ── Suggestion dropdown ────────────────────────────────────────────────────
+  static Widget _suggestionBox({
+    required List<String> items,
+    required String queryText,
+    required IconData icon,
+    required ValueChanged<String> onSelect,
+  }) {
+    final query = queryText.toUpperCase().trim();
+    return Container(
+      constraints: const BoxConstraints(maxHeight: 180),
+      decoration: BoxDecoration(
+        color: _C.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _C.primary.withOpacity(0.25)),
+        boxShadow: [BoxShadow(color: _C.primary.withOpacity(0.08),
+            blurRadius: 16, offset: const Offset(0, 4))],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: ListView.separated(
+          shrinkWrap: true,
+          padding: EdgeInsets.zero,
+          itemCount: items.length,
+          separatorBuilder: (_, __) => const Divider(height: 1, color: _C.border),
+          itemBuilder: (_, i) {
+            final s   = items[i];
+            final idx = s.indexOf(query);
+            return InkWell(
+              onTap: () => onSelect(s),
+              child: Container(
+                color: i.isEven ? _C.primaryLt.withOpacity(0.4) : _C.surface,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                          color: _C.primaryLt,
+                          borderRadius: BorderRadius.circular(6)),
+                      child: Icon(icon, color: _C.primary, size: 12),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: idx >= 0 && query.isNotEmpty
+                          ? RichText(
+                        text: TextSpan(children: [
+                          TextSpan(text: s.substring(0, idx),
+                              style: const TextStyle(color: _C.textMid,
+                                  fontSize: 13, fontWeight: FontWeight.w500)),
+                          TextSpan(text: s.substring(idx, idx + query.length),
+                              style: const TextStyle(color: _C.primary,
+                                  fontSize: 13, fontWeight: FontWeight.w800,
+                                  backgroundColor: Color(0xFFE8F5ED))),
+                          TextSpan(text: s.substring(idx + query.length),
+                              style: const TextStyle(color: _C.textMid,
+                                  fontSize: 13, fontWeight: FontWeight.w500)),
+                        ]),
+                      )
+                          : Text(s, style: const TextStyle(color: _C.primary,
+                          fontSize: 13, fontWeight: FontWeight.w600)),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
   }
+
+  // ── Badge helpers ──────────────────────────────────────────────────────────
+  static Widget _badgeGold(String text) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+    decoration: BoxDecoration(color: const Color(0xFFFFF3CD),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: _C.gold.withOpacity(0.5))),
+    child: Text(text, style: const TextStyle(color: _C.gold,
+        fontSize: 10, fontWeight: FontWeight.w700)),
+  );
+
+  static Widget _badgeGreen(String text) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+    decoration: BoxDecoration(color: _C.primaryLt,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: _C.primary.withOpacity(0.35))),
+    child: Text(text, style: const TextStyle(color: _C.primary,
+        fontSize: 10, fontWeight: FontWeight.w700)),
+  );
 
   void _showSnack(String msg, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      backgroundColor: color,
+      content: Text(msg), backgroundColor: color,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ));
@@ -1039,17 +872,15 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
 
   void _save() {
     if (_supplierNameCtrl.text.trim().isEmpty) {
-      _showSnack('Please enter Supplier Name', _C.gold);
-      return;
+      _showSnack('Please enter Supplier Name', _C.gold); return;
     }
     if (_items.isEmpty) {
-      _showSnack('Please add at least one item', _C.gold);
-      return;
+      _showSnack('Please add at least one item', _C.gold); return;
     }
     HapticFeedback.mediumImpact();
 
     final order = SavedOrder(
-      id:              'PO-${DateTime.now().millisecondsSinceEpoch}',
+      id:              'PI-${DateTime.now().millisecondsSinceEpoch}',
       supplierName:    _supplierNameCtrl.text.trim(),
       supplierAddress: _supplierAddressCtrl.text.trim(),
       reference:       _referenceCtrl.text.trim(),
@@ -1074,7 +905,7 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
       _gstType             = GstType.cgstSgst;
       _globalTaxType       = TaxType.exclusive;
       _tcsType             = TcsType.noTcs;
-      _openSection         = _kTypes; // reset accordion to first card
+      _openSection         = _kTypes;
       _showViewOrders      = true;
     });
 
@@ -1083,7 +914,7 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
         const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
         const SizedBox(width: 10),
         Flexible(child: Text(
-            'Order saved! Total ₹${order.grandTotal.toStringAsFixed(2)}')),
+            'Invoice saved! Total ₹${order.grandTotal.toStringAsFixed(2)}')),
       ]),
       backgroundColor: _C.primary,
       behavior: SnackBarBehavior.floating,
@@ -1091,12 +922,12 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
     ));
   }
 
-  // ── Build ──────────────────────────────────────────────────────────────
+  // ── Build ──────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _C.bg,
-      resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomInset: false,
       body: Column(
         children: [
           _buildHeader(),
@@ -1110,9 +941,7 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
                   if (currentChild != null) currentChild,
                 ],
               ),
-              child: _showViewOrders
-                  ? _buildViewOrders()
-                  : _buildOrderForm(),
+              child: _showViewOrders ? _buildViewOrders() : _buildOrderForm(),
             ),
           ),
           if (!_showViewOrders) _buildBottomBar(),
@@ -1121,13 +950,13 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
     );
   }
 
+  // ── Header ─────────────────────────────────────────────────────────────────
   Widget _buildHeader() {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [AppTheme.appBarGradStart, AppTheme.appBarGradEnd],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          begin: Alignment.topLeft, end: Alignment.bottomRight,
         ),
         boxShadow: [BoxShadow(
             color: Color(0x441B8A3E), blurRadius: 16, offset: Offset(0, 6))],
@@ -1145,8 +974,7 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
                     icon: const Icon(Icons.arrow_back_ios_new_rounded,
                         color: Colors.white, size: 20),
                     onPressed: () => Navigator.pop(context),
-                    constraints: const BoxConstraints(
-                        minWidth: 40, minHeight: 40),
+                    constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
                     padding: const EdgeInsets.all(8),
                   ),
                   const Expanded(
@@ -1167,18 +995,12 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
                 ),
                 child: Row(
                   children: [
-                    _tab(
-                      label: 'New Order',
-                      icon: Icons.add_circle_outline_rounded,
-                      active: !_showViewOrders,
-                      onTap: () => setState(() => _showViewOrders = false),
-                    ),
-                    _tab(
-                      label: 'View Orders',
-                      icon: Icons.list_alt_rounded,
-                      active: _showViewOrders,
-                      onTap: () => setState(() => _showViewOrders = true),
-                    ),
+                    _tab(label: 'New Order', icon: Icons.add_circle_outline_rounded,
+                        active: !_showViewOrders,
+                        onTap: () => setState(() => _showViewOrders = false)),
+                    _tab(label: 'View Orders', icon: Icons.list_alt_rounded,
+                        active: _showViewOrders,
+                        onTap: () => setState(() => _showViewOrders = true)),
                   ],
                 ),
               ),
@@ -1190,10 +1012,8 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
   }
 
   Widget _tab({
-    required String label,
-    required IconData icon,
-    required bool active,
-    required VoidCallback onTap,
+    required String label, required IconData icon,
+    required bool active, required VoidCallback onTap,
   }) {
     return Expanded(
       child: GestureDetector(
@@ -1205,10 +1025,8 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
           decoration: BoxDecoration(
             color: active ? Colors.white : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
-            boxShadow: active
-                ? [BoxShadow(color: Colors.black.withOpacity(0.10),
-                blurRadius: 8, offset: const Offset(0, 2))]
-                : [],
+            boxShadow: active ? [BoxShadow(color: Colors.black.withOpacity(0.10),
+                blurRadius: 8, offset: const Offset(0, 2))] : [],
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -1216,8 +1034,7 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
               Icon(icon, size: 16,
                   color: active ? _C.primary : Colors.white.withOpacity(0.75)),
               const SizedBox(width: 6),
-              Text(label, style: TextStyle(
-                fontSize: 13,
+              Text(label, style: TextStyle(fontSize: 13,
                 fontWeight: active ? FontWeight.w700 : FontWeight.w500,
                 color: active ? _C.primary : Colors.white.withOpacity(0.75),
               )),
@@ -1228,148 +1045,119 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
     );
   }
 
+  // ── Order Form ─────────────────────────────────────────────────────────────
   Widget _buildOrderForm() {
     return SingleChildScrollView(
       key: const ValueKey('form'),
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       physics: const BouncingScrollPhysics(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Order Types ──────────────────────────────────────────────
-          _accordionCard(
-            sectionKey: _kTypes,
-            icon: Icons.tune_rounded,
-            title: 'Order Types',
-            child: _buildTypesContent(),
-          ),
-          const SizedBox(height: 14),
-
-          // ── Supplier Details ─────────────────────────────────────────
-          _accordionCard(
-            sectionKey: _kSupplier,
-            icon: Icons.store_rounded,
-            title: 'Supplier Details',
-            child: _buildSupplierContent(),
-          ),
-          const SizedBox(height: 14),
-
-          // ── Date & Reference ─────────────────────────────────────────
-          _accordionCard(
-            sectionKey: _kDateRef,
-            icon: Icons.calendar_month_rounded,
-            title: 'Date & Reference',
-            child: _buildDateRefContent(),
-          ),
+          _accordionCard(sectionKey: _kTypes, icon: Icons.tune_rounded,
+              title: 'Order Types', child: _buildTypesContent()),
+          const SizedBox(height: 10),
+          _accordionCard(sectionKey: _kSupplier, icon: Icons.store_rounded,
+              title: 'Supplier Details', child: _buildSupplierContent()),
+          const SizedBox(height: 10),
+          _accordionCard(sectionKey: _kDateRef, icon: Icons.calendar_month_rounded,
+              title: 'Date & Reference', child: _buildDateRefContent()),
           const SizedBox(height: 16),
-
-          // ── Add Item bar ─────────────────────────────────────────────
           _buildAddBar(),
           const SizedBox(height: 12),
-
           if (_items.isNotEmpty) ...[
             _buildItemsCards(),
-            const SizedBox(height: 12),
-            _buildDeleteBar(),
             const SizedBox(height: 12),
             _buildSummaryCard(),
             const SizedBox(height: 16),
           ],
-          const SizedBox(height: 100),
+          const SizedBox(height: 20),
         ],
       ),
     );
   }
 
-  // ── Shared accordion card ──────────────────────────────────────────────
+  // ── Accordion Card ─────────────────────────────────────────────────────────
   Widget _accordionCard({
-    required String   sectionKey,
-    required IconData icon,
-    required String   title,
-    required Widget   child,
+    required String sectionKey, required IconData icon,
+    required String title, required Widget child,
   }) {
     final isOpen = _openSection == sectionKey;
-
     return Container(
       decoration: BoxDecoration(
         color: _C.surface,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 16,
-            offset: const Offset(0, 4))],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06),
+            blurRadius: 16, offset: const Offset(0, 4))],
+        border: isOpen
+            ? Border.all(color: _C.primary.withOpacity(0.25), width: 1.2)
+            : Border.all(color: Colors.transparent, width: 1.2),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Header
-          InkWell(
+          GestureDetector(
             onTap: () => _toggleSection(sectionKey),
-            borderRadius: BorderRadius.circular(20),
+            behavior: HitTestBehavior.opaque,
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 18, vertical: 14),
+              padding: const EdgeInsets.fromLTRB(18, 14, 14, 14),
               child: Row(
                 children: [
-                  Container(
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: isOpen ? _C.primary : _C.primaryLt,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(icon,
-                        color: isOpen ? Colors.white : _C.primary,
-                        size: 18),
+                        color: isOpen ? Colors.white : _C.primary, size: 18),
                   ),
                   const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(title,
-                        style: const TextStyle(color: _C.textDark,
-                            fontSize: 15, fontWeight: FontWeight.w700)),
-                  ),
+                  Expanded(child: Text(title,
+                      style: TextStyle(color: _C.textDark, fontSize: 15,
+                          fontWeight: isOpen ? FontWeight.w800 : FontWeight.w700))),
                   AnimatedRotation(
                     turns: isOpen ? 0.5 : 0.0,
                     duration: const Duration(milliseconds: 280),
                     curve: Curves.easeInOut,
                     child: Container(
-                      width: 30, height: 30,
+                      padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                          color: _C.primaryLt,
-                          borderRadius: BorderRadius.circular(8)),
-                      child: const Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          color: _C.primary, size: 20),
+                        color: isOpen ? _C.primary.withOpacity(0.08) : _C.bg,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(Icons.keyboard_arrow_down_rounded,
+                          color: isOpen ? _C.primary : _C.textMid, size: 20),
                     ),
                   ),
                 ],
               ),
             ),
           ),
-          // Animated body
-          AnimatedCrossFade(
-            firstChild: const SizedBox(width: double.infinity, height: 0),
-            secondChild: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Divider(height: 1, color: _C.border),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
-                  child: child,
-                ),
-              ],
-            ),
-            crossFadeState: isOpen
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            duration: const Duration(milliseconds: 280),
-            sizeCurve: Curves.easeInOut,
+          AnimatedSize(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            child: isOpen
+                ? Padding(
+              padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Divider(height: 1, color: _C.border),
+                  const SizedBox(height: 16),
+                  child,
+                ],
+              ),
+            )
+                : const SizedBox.shrink(),
           ),
         ],
       ),
     );
   }
 
-  // ── Types content ──────────────────────────────────────────────────────
+  // ── Types Content ──────────────────────────────────────────────────────────
   Widget _buildTypesContent() {
     return Column(
       children: [
@@ -1384,21 +1172,16 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
               DropdownMenuItem(value: OrderType.wholesaleBC,
                   child: Text('Wholesale B-C')),
             ],
-            onChanged: (v) {
-              if (v != null) setState(() => _orderType = v);
-            },
+            onChanged: (v) { if (v != null) setState(() => _orderType = v); },
           )),
           const SizedBox(width: 12),
           Expanded(child: _TypeDropdown<GstType>(
             label: 'GST Type', value: _gstType,
             items: const [
-              DropdownMenuItem(value: GstType.cgstSgst,
-                  child: Text('CGST/SGST')),
+              DropdownMenuItem(value: GstType.cgstSgst, child: Text('CGST/SGST')),
               DropdownMenuItem(value: GstType.igst, child: Text('IGST')),
             ],
-            onChanged: (v) {
-              if (v != null) setState(() => _gstType = v);
-            },
+            onChanged: (v) { if (v != null) setState(() => _gstType = v); },
           )),
         ]),
         const SizedBox(height: 12),
@@ -1406,14 +1189,10 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
           Expanded(child: _TypeDropdown<TaxType>(
             label: 'Tax Inclusion', value: _globalTaxType,
             items: const [
-              DropdownMenuItem(value: TaxType.exclusive,
-                  child: Text('Exclude Tax')),
-              DropdownMenuItem(value: TaxType.inclusive,
-                  child: Text('Include Tax')),
+              DropdownMenuItem(value: TaxType.exclusive, child: Text('Exclude Tax')),
+              DropdownMenuItem(value: TaxType.inclusive, child: Text('Include Tax')),
             ],
-            onChanged: (v) {
-              if (v != null) setState(() => _globalTaxType = v);
-            },
+            onChanged: (v) { if (v != null) setState(() => _globalTaxType = v); },
           )),
           const SizedBox(width: 12),
           Expanded(child: _TypeDropdown<TcsType>(
@@ -1423,16 +1202,14 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
               DropdownMenuItem(value: TcsType.tcs01,  child: Text('TCS @0.1%')),
               DropdownMenuItem(value: TcsType.tcs1,   child: Text('TCS @1%')),
             ],
-            onChanged: (v) {
-              if (v != null) setState(() => _tcsType = v);
-            },
+            onChanged: (v) { if (v != null) setState(() => _tcsType = v); },
           )),
         ]),
       ],
     );
   }
 
-  // ── Supplier content ───────────────────────────────────────────────────
+  // ── Supplier Content ───────────────────────────────────────────────────────
   Widget _buildSupplierContent() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1445,138 +1222,46 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
           textCapitalization: TextCapitalization.characters,
           style: const TextStyle(color: _C.textDark, fontSize: 15,
               fontWeight: FontWeight.w500),
-          onChanged: (val) {
-            setState(() => _supplierSuggestions = SupplierNames.search(val));
-          },
+          onChanged: (val) =>
+              setState(() => _supplierSuggestions = SupplierNames.search(val)),
           decoration: InputDecoration(
-            prefixIcon: const Icon(Icons.store_rounded,
-                color: _C.primary, size: 20),
-            suffixIcon: _supplierNameCtrl.text.isNotEmpty
-                ? IconButton(
-              icon: const Icon(Icons.clear,
-                  color: _C.textLight, size: 18),
-              onPressed: () => setState(() {
-                _supplierNameCtrl.clear();
-                _supplierSuggestions = [];
-              }),
-            ) : null,
             hintText: 'Search or enter supplier name',
             hintStyle: const TextStyle(color: _C.textLight, fontSize: 14),
             filled: true, fillColor: _C.bg,
-            contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16, vertical: 14),
-            border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14),
                 borderSide: const BorderSide(color: _C.border)),
-            enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14),
                 borderSide: const BorderSide(color: _C.border)),
-            focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14),
                 borderSide: const BorderSide(color: _C.primary, width: 1.5)),
           ),
         ),
         if (_supplierSuggestions.isNotEmpty) ...[
           const SizedBox(height: 4),
-          Container(
-            constraints: const BoxConstraints(maxHeight: 200),
-            decoration: BoxDecoration(
-              color:  _C.primaryLt,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: _C.primary.withOpacity(0.25)),
-              boxShadow: [BoxShadow(
-                  color: _C.primary.withOpacity(0.08),
-                  blurRadius: 16, offset: const Offset(0, 4))],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(14),
-              child: ListView.separated(
-                shrinkWrap: true, padding: EdgeInsets.zero,
-                itemCount: _supplierSuggestions.length,
-                separatorBuilder: (_, __) =>
-                const Divider(height: 1, color: _C.border),
-                itemBuilder: (_, i) {
-                  final s     = _supplierSuggestions[i];
-                  final query = _supplierNameCtrl.text
-                      .toUpperCase().trim();
-                  final idx   = s.indexOf(query);
-                  return InkWell(
-                    onTap: () => setState(() {
-                      _supplierNameCtrl.text = s;
-                      _supplierNameCtrl.selection =
-                          TextSelection.fromPosition(
-                              TextPosition(offset: s.length));
-                      _supplierSuggestions = [];
-                      _supplierFocus.unfocus();
-                    }),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 12),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.store_rounded,
-                              color: _C.primary, size: 15),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: idx >= 0 && query.isNotEmpty
-                                ? RichText(
-                              text: TextSpan(children: [
-                                TextSpan(
-                                  text: s.substring(0, idx),
-                                  style: const TextStyle(
-                                      color: _C.primaryDk,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500),
-                                ),
-                                TextSpan(
-                                  text: s.substring(
-                                      idx, idx + query.length),
-                                  style: const TextStyle(
-                                      color: _C.primary,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w800,
-                                      backgroundColor:
-                                      Color(0xFFE8F5ED)),
-                                ),
-                                TextSpan(
-                                  text: s.substring(
-                                      idx + query.length),
-                                  style: const TextStyle(
-                                      color: _C.primaryDk,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500),
-                                ),
-                              ]),
-                            )
-                                : Text(s,
-                                style: const TextStyle(
-                                    color: _C.primaryDk,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500)),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
+          _suggestionBox(
+            items: _supplierSuggestions,
+            queryText: _supplierNameCtrl.text,
+            icon: Icons.store_rounded,
+            onSelect: (s) => setState(() {
+              _supplierNameCtrl.text = s;
+              _supplierNameCtrl.selection =
+                  TextSelection.fromPosition(TextPosition(offset: s.length));
+              _supplierSuggestions = [];
+              _supplierFocus.unfocus();
+            }),
           ),
         ],
         const SizedBox(height: 14),
         const _FieldLabel(label: 'Supplier Address'),
         const SizedBox(height: 6),
-        _InputField(
-          controller: _supplierAddressCtrl,
-          hint: 'Enter supplier address',
-          icon: Icons.location_on_rounded,
-          maxLines: 2,
-        ),
+        _InputField(controller: _supplierAddressCtrl,
+            hint: 'Enter supplier address', maxLines: 2),
       ],
     );
   }
 
-  // ── Date & Ref content ─────────────────────────────────────────────────
+  // ── Date & Reference Content ───────────────────────────────────────────────
   Widget _buildDateRefContent() {
     return Row(
       children: [
@@ -1589,13 +1274,10 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
               GestureDetector(
                 onTap: _pickDate,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: _C.bg,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: _C.border),
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                  decoration: BoxDecoration(color: _C.bg,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: _C.border)),
                   child: Row(children: [
                     const Icon(Icons.calendar_month_rounded,
                         color: _C.primary, size: 18),
@@ -1619,11 +1301,7 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
             children: [
               const _FieldLabel(label: 'Ref / Invoice No'),
               const SizedBox(height: 6),
-              _InputField(
-                controller: _referenceCtrl,
-                hint: 'Enter invoice no',
-                icon: Icons.tag_rounded,
-              ),
+              _InputField(controller: _referenceCtrl, hint: 'Enter invoice no'),
             ],
           ),
         ),
@@ -1631,7 +1309,7 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
     );
   }
 
-  // ── Add Item bar ───────────────────────────────────────────────────────
+  // ── Add Bar ────────────────────────────────────────────────────────────────
   Widget _buildAddBar() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -1641,52 +1319,44 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
         boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06),
             blurRadius: 16, offset: const Offset(0, 4))],
       ),
-      child: Row(
-        children: [
+      child: Row(children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(color: _C.primaryLt,
+              borderRadius: BorderRadius.circular(10)),
+          child: const Icon(Icons.shopping_cart_rounded,
+              color: _C.primary, size: 18),
+        ),
+        const SizedBox(width: 10),
+        const Text('Order Items',
+            style: TextStyle(color: _C.textDark, fontSize: 15,
+                fontWeight: FontWeight.w700)),
+        if (_items.isNotEmpty) ...[
+          const SizedBox(width: 8),
           Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-                color: _C.primaryLt,
-                borderRadius: BorderRadius.circular(10)),
-            child: const Icon(Icons.shopping_cart_rounded,
-                color: _C.primary, size: 18),
-          ),
-          const SizedBox(width: 10),
-          const Text('Order Items',
-              style: TextStyle(color: _C.textDark, fontSize: 15,
-                  fontWeight: FontWeight.w700)),
-          if (_items.isNotEmpty) ...[
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                  color: _C.primaryLt,
-                  borderRadius: BorderRadius.circular(20)),
-              child: Text('${_items.length}',
-                  style: const TextStyle(color: _C.primary,
-                      fontSize: 11, fontWeight: FontWeight.w700)),
-            ),
-          ],
-          const Spacer(),
-          GestureDetector(
-            onTap: () => _showItemSheet(),
-            child: Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: _C.primaryLt,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(Icons.add_rounded,
-                  color: _C.primary, size: 16),
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(color: _C.primaryLt,
+                borderRadius: BorderRadius.circular(20)),
+            child: Text('${_items.length}',
+                style: const TextStyle(color: _C.primary,
+                    fontSize: 11, fontWeight: FontWeight.w700)),
           ),
         ],
-      ),
+        const Spacer(),
+        GestureDetector(
+          onTap: () => _showItemSheet(),
+          child: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(color: _C.primaryLt,
+                borderRadius: BorderRadius.circular(8)),
+            child: const Icon(Icons.add_rounded, color: _C.primary, size: 16),
+          ),
+        ),
+      ]),
     );
   }
 
-  // ── Items cards ────────────────────────────────────────────────────────
+  // ── Items Cards ────────────────────────────────────────────────────────────
   Widget _buildItemsCards() {
     return Container(
       decoration: BoxDecoration(
@@ -1701,18 +1371,15 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Row(children: [
-              const Text('Items',
-                  style: TextStyle(color: _C.textDark, fontSize: 14,
-                      fontWeight: FontWeight.w700)),
+              const Text('Items', style: TextStyle(color: _C.textDark,
+                  fontSize: 14, fontWeight: FontWeight.w700)),
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(color: _C.primaryLt,
                     borderRadius: BorderRadius.circular(20)),
-                child: Text('${_items.length}',
-                    style: const TextStyle(color: _C.primary,
-                        fontSize: 11, fontWeight: FontWeight.w700)),
+                child: Text('${_items.length}', style: const TextStyle(
+                    color: _C.primary, fontSize: 11, fontWeight: FontWeight.w700)),
               ),
             ]),
           ),
@@ -1720,131 +1387,9 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _items.length,
-            separatorBuilder: (_, __) => Divider(
-                height: 1, indent: 16, endIndent: 16, color: _C.border),
-            itemBuilder: (_, i) {
-              final item     = _items[i];
-              final selected = _selectedIndex == i;
-              return GestureDetector(
-                onTap: () =>
-                    setState(() => _selectedIndex = selected ? null : i),
-                onDoubleTap: () =>
-                    _showItemSheet(existing: item, editIndex: i),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 5),
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: selected ? _C.primaryLt : _C.bg,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: selected
-                          ? _C.primary.withOpacity(0.4) : _C.border,
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 26, height: 26,
-                            decoration: BoxDecoration(
-                              color: selected
-                                  ? _C.primary
-                                  : _C.primary.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Center(
-                              child: Text('${i + 1}',
-                                  style: TextStyle(
-                                      color: selected
-                                          ? Colors.white : _C.primary,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w800)),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(item.product,
-                                style: const TextStyle(
-                                    color: _C.textDark,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis),
-                          ),
-                          const SizedBox(width: 8),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                '₹${item.grandTotal.toStringAsFixed(2)}',
-                                style: const TextStyle(
-                                    color: _C.primary,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w900),
-                              ),
-                              Container(
-                                margin: const EdgeInsets.only(top: 2),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: item.taxType == TaxType.inclusive
-                                      ? const Color(0xFFE8F5ED)
-                                      : const Color(0xFFFFF3CD),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  item.taxType == TaxType.inclusive
-                                      ? 'incl. tax' : 'excl. tax',
-                                  style: TextStyle(
-                                    color: item.taxType == TaxType.inclusive
-                                        ? _C.primary : _C.gold,
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Wrap(spacing: 6, runSpacing: 4, children: [
-                        _InfoChip(
-                          icon: Icons.currency_rupee_rounded,
-                          value: '₹${item.price.toStringAsFixed(0)}',
-                        ),
-                        _InfoChip(
-                          icon: Icons.layers_rounded,
-                          value: '× ${item.quantity}',
-                        ),
-                        if (item.discountValue > 0)
-                          _InfoChip(
-                            icon: Icons.discount_rounded,
-                            value: item.discountIsPercent
-                                ? '${item.discountValue.toStringAsFixed(0)}% off'
-                                : '₹${item.discountValue.toStringAsFixed(0)} off',
-                            isHighlight: true,
-                          ),
-                        _InfoChip(
-                          icon: Icons.percent_rounded,
-                          value: '${item.taxRate.toStringAsFixed(0)}% tax',
-                        ),
-                        _InfoChip(
-                          icon: Icons.edit_rounded,
-                          value: 'double-tap to edit',
-                        ),
-                      ]),
-                    ],
-                  ),
-                ),
-              );
-            },
+            separatorBuilder: (_, __) =>
+                Divider(height: 1, indent: 16, endIndent: 16, color: _C.border),
+            itemBuilder: (_, i) => _buildItemCard(_items[i], i),
           ),
           const SizedBox(height: 12),
         ],
@@ -1852,86 +1397,171 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
     );
   }
 
-  // ── Delete bar ─────────────────────────────────────────────────────────
-  Widget _buildDeleteBar() {
-    String selectedLabel = 'Tap an item to select';
-    if (_selectedIndex != null && _selectedIndex! < _items.length) {
-      final name = _items[_selectedIndex!].product;
-      selectedLabel = name.length > 24
-          ? '${name.substring(0, 24)}…' : name;
-    }
+  // ── Single Item Card — GRN style ───────────────────────────────────────────
+  Widget _buildItemCard(OrderItem item, int i) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
       decoration: BoxDecoration(
-        color: _C.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _C.red.withOpacity(0.15)),
-        boxShadow: [BoxShadow(color: _C.red.withOpacity(0.05),
-            blurRadius: 16, offset: const Offset(0, 4))],
+        color: _C.bg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _C.border),
       ),
-      child: Row(children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-              color: _C.red.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(10)),
-          child: const Icon(Icons.delete_sweep_rounded,
-              color: _C.red, size: 18),
-        ),
-        const SizedBox(width: 10),
-        Flexible(
-          child: Column(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+
+          // ── Row 1: Serial + Product name + Price + tax badge ───────────────
+          Row(
             crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Remove Item',
-                  style: TextStyle(color: _C.textDark,
-                      fontSize: 13, fontWeight: FontWeight.w700)),
-              const SizedBox(height: 2),
-              Text(selectedLabel,
-                  maxLines: 1, overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                      color: _selectedIndex != null
-                          ? _C.red : _C.textLight,
-                      fontSize: 11, fontWeight: FontWeight.w500)),
+              Container(
+                width: 24, height: 24,
+                decoration: BoxDecoration(
+                  color: _C.primary.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(7),
+                ),
+                child: Center(child: Text('${i + 1}',
+                    style: const TextStyle(color: _C.primary,
+                        fontSize: 11, fontWeight: FontWeight.w800))),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(item.product,
+                    style: const TextStyle(color: _C.textDark, fontSize: 13,
+                        fontWeight: FontWeight.w700, height: 1.3),
+                    maxLines: 2, overflow: TextOverflow.ellipsis),
+              ),
+              const SizedBox(width: 8),
+              // Price + tax badge — IntrinsicWidth prevents overflow
+              IntrinsicWidth(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('₹${item.grandTotal.toStringAsFixed(2)}',
+                        style: const TextStyle(color: _C.primary,
+                            fontSize: 15, fontWeight: FontWeight.w900)),
+                    const SizedBox(height: 3),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: item.taxType == TaxType.inclusive
+                              ? const Color(0xFFE8F5ED)
+                              : const Color(0xFFFFF3CD),
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: Text(
+                          item.taxType == TaxType.inclusive
+                              ? 'incl. tax' : 'excl. tax',
+                          style: TextStyle(
+                              color: item.taxType == TaxType.inclusive
+                                  ? _C.primary : _C.gold,
+                              fontSize: 9, fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
-        ),
-        const SizedBox(width: 8),
-        GestureDetector(
-          onTap: _deleteSelected,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(
-                horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: _selectedIndex != null
-                  ? _C.red : _C.red.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                  color: _selectedIndex != null
-                      ? _C.red : _C.red.withOpacity(0.25)),
+
+          // ── Row 2: Batch ───────────────────────────────────────────────────
+          if (item.batch.isNotEmpty) ...[
+            const SizedBox(height: 5),
+            Padding(
+              padding: const EdgeInsets.only(left: 32),
+              child: Row(children: [
+                const Icon(Icons.qr_code_rounded, color: _C.textMid, size: 11),
+                const SizedBox(width: 4),
+                Text('Batch: ${item.batch}',
+                    style: const TextStyle(color: _C.textMid,
+                        fontSize: 11, fontWeight: FontWeight.w500)),
+              ]),
             ),
-            child: Row(mainAxisSize: MainAxisSize.min, children: [
-              Icon(Icons.delete_rounded,
-                  color: _selectedIndex != null
-                      ? Colors.white : _C.red, size: 16),
-              const SizedBox(width: 5),
-              Text('DELETE',
-                  style: TextStyle(
-                      color: _selectedIndex != null
-                          ? Colors.white : _C.red,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.4)),
-            ]),
+          ],
+
+          // ── Row 3: Edit | Chips | Delete ───────────────────────────────────
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () => _showItemSheet(existing: item, editIndex: i),
+                child: Container(
+                  width: 28, height: 28,
+                  decoration: BoxDecoration(
+                    color: _C.primaryLt, shape: BoxShape.circle,
+                    border: Border.all(color: _C.primary.withOpacity(0.3)),
+                  ),
+                  child: const Icon(Icons.edit_rounded, color: _C.primary, size: 14),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(children: [
+                    _chip('₹${item.price.toStringAsFixed(0)}'),
+                    const SizedBox(width: 3),
+                    _chip('×${item.quantity}'),
+                    if (item.discountValue > 0) ...[
+                      const SizedBox(width: 3),
+                      _chip(
+                        item.discountIsPercent
+                            ? '${item.discountValue.toStringAsFixed(0)}%off'
+                            : '₹${item.discountValue.toStringAsFixed(0)} off',
+                        isGold: true,
+                      ),
+                    ],
+                    const SizedBox(width: 3),
+                    _chip('${item.taxRate.toStringAsFixed(0)}%tax'),
+                  ]),
+                ),
+              ),
+              const SizedBox(width: 4),
+              GestureDetector(
+                onTap: () => setState(() {
+                  _items.removeAt(i);
+                  _selectedIndex = null;
+                }),
+                child: Container(
+                  width: 28, height: 28,
+                  decoration: BoxDecoration(
+                    color: _C.red.withOpacity(0.08), shape: BoxShape.circle,
+                    border: Border.all(color: _C.red.withOpacity(0.35)),
+                  ),
+                  child: const Icon(Icons.delete_outline_rounded,
+                      color: _C.red, size: 14),
+                ),
+              ),
+            ],
           ),
-        ),
-      ]),
+        ],
+      ),
     );
   }
 
-  // ── Summary card ───────────────────────────────────────────────────────
+  // ── Chip helper ────────────────────────────────────────────────────────────
+  static Widget _chip(String label, {bool isGold = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: isGold ? const Color(0xFFFFF3CD) : _C.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+            color: isGold ? _C.gold.withOpacity(0.5) : _C.border),
+      ),
+      child: Text(label,
+          style: TextStyle(color: isGold ? _C.gold : _C.textDark,
+              fontSize: 11, fontWeight: FontWeight.w600)),
+    );
+  }
+
+  // ── Summary Card ───────────────────────────────────────────────────────────
   Widget _buildSummaryCard() {
     double tcsAmount = 0;
     if (_tcsType == TcsType.tcs01) tcsAmount = _grandTotal * 0.001;
@@ -1954,19 +1584,17 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(color: _C.primaryLt,
                   borderRadius: BorderRadius.circular(10)),
-              child: const Icon(Icons.summarize_rounded,
-                  color: _C.primary, size: 18),
+              child: const Icon(Icons.summarize_rounded, color: _C.primary, size: 18),
             ),
             const SizedBox(width: 10),
-            const Text('Order Summary',
-                style: TextStyle(color: _C.textDark, fontSize: 15,
-                    fontWeight: FontWeight.w700)),
+            const Text('Order Summary', style: TextStyle(color: _C.textDark,
+                fontSize: 15, fontWeight: FontWeight.w700)),
           ]),
           const SizedBox(height: 16),
           _SummaryRow('Subtotal', '₹${_subTotal.toStringAsFixed(2)}'),
           if (_discTotal > 0)
-            _SummaryRow('Discount',
-                '− ₹${_discTotal.toStringAsFixed(2)}', isRed: true),
+            _SummaryRow('Discount', '− ₹${_discTotal.toStringAsFixed(2)}',
+                isRed: true),
           _SummaryRow('Tax', '₹${_taxTotal.toStringAsFixed(2)}'),
           if (tcsAmount > 0)
             _SummaryRow(
@@ -1976,9 +1604,8 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Grand Total',
-                  style: TextStyle(color: _C.textDark, fontSize: 15,
-                      fontWeight: FontWeight.w700)),
+              const Text('Grand Total', style: TextStyle(color: _C.textDark,
+                  fontSize: 15, fontWeight: FontWeight.w700)),
               Text('₹${netTotal.toStringAsFixed(2)}',
                   style: const TextStyle(color: _C.primary,
                       fontSize: 20, fontWeight: FontWeight.w900)),
@@ -1989,7 +1616,7 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
     );
   }
 
-  // ── Bottom bar ─────────────────────────────────────────────────────────
+  // ── Bottom Bar — no overflow ───────────────────────────────────────────────
   Widget _buildBottomBar() {
     return SafeArea(
       top: false,
@@ -1997,24 +1624,14 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
         child: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: _transferType == TransferType.returnOrder
-                  ? [_C.red, const Color(0xFFB91C1C)]
-                  : [_C.primary, _C.primaryDk],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
+            gradient: const LinearGradient(
+              colors: [_C.primary, _C.primaryDk],
+              begin: Alignment.centerLeft, end: Alignment.centerRight,
             ),
             borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: (_transferType == TransferType.returnOrder
-                    ? _C.red
-                    : _C.primary)
-                    .withOpacity(0.45),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
+            boxShadow: [BoxShadow(
+                color: _C.primary.withOpacity(0.45),
+                blurRadius: 20, offset: const Offset(0, 8))],
           ),
           child: Material(
             color: Colors.transparent,
@@ -2022,71 +1639,49 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
               onTap: _save,
               borderRadius: BorderRadius.circular(20),
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 20, vertical: 14),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 child: Row(
                   children: [
-                    // ── Left: Total label + amount ──────────────────
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text(
-                          'TOTAL AMOUNT',
-                          style: TextStyle(
-                            color: Colors.white60,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 1.2,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text('TOTAL AMOUNT',
+                              style: TextStyle(color: Colors.white60,
+                                  fontSize: 10, fontWeight: FontWeight.w600,
+                                  letterSpacing: 1.2)),
+                          const SizedBox(height: 2),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text('₹${_grandTotal.toStringAsFixed(2)}',
+                                style: const TextStyle(color: Colors.white,
+                                    fontSize: 24, fontWeight: FontWeight.w900,
+                                    letterSpacing: 0.5)),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '₹${_grandTotal.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-
-                    const Spacer(),
-
-                    // ── Right: Save button ──────────────────────────
+                    const SizedBox(width: 10),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 13),
+                          horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.18),
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
                             color: Colors.white.withOpacity(0.35), width: 1),
                       ),
-                      child: Row(
+                      child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
-                            _transferType == TransferType.returnOrder
-                                ? Icons.assignment_return_rounded
-                                : Icons.save_rounded,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            _transferType == TransferType.returnOrder
-                                ? 'SAVE RETURN'
-                                : 'SAVE ORDER',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.6,
-                            ),
-                          ),
+                          Icon(Icons.save_rounded, color: Colors.white, size: 17),
+                          SizedBox(width: 7),
+                          Text('SAVE ORDER',
+                              style: TextStyle(color: Colors.white,
+                                  fontSize: 12, fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.5)),
                         ],
                       ),
                     ),
@@ -2100,7 +1695,7 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
     );
   }
 
-  // ── View Orders ────────────────────────────────────────────────────────
+  // ── View Orders ────────────────────────────────────────────────────────────
   Widget _buildViewOrders() {
     if (_savedOrders.isEmpty) {
       return Center(
@@ -2116,24 +1711,21 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
                   color: _C.primary, size: 44),
             ),
             const SizedBox(height: 20),
-            const Text('No Orders Yet',
+            const Text('No Invoices Yet',
                 style: TextStyle(color: _C.textDark, fontSize: 18,
                     fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
-            const Text('Save an order to see it here',
+            const Text('Save an invoice to see it here',
                 style: TextStyle(color: _C.textMid, fontSize: 14)),
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: () => setState(() => _showViewOrders = false),
-              icon: const Icon(Icons.add_rounded,
-                  color: Colors.white, size: 18),
-              label: const Text('Create Order',
-                  style: TextStyle(color: Colors.white,
-                      fontWeight: FontWeight.w700)),
+              icon: const Icon(Icons.add_rounded, color: Colors.white, size: 18),
+              label: const Text('Create Invoice',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: _C.primary,
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 28, vertical: 14),
+                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14)),
               ),
@@ -2157,14 +1749,12 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
       OrderType.retailBC:    'Retail B-C',
       OrderType.wholesaleBC: 'Wholesale B-C',
     }[order.orderType]!;
-    final gstLabel =
-    order.gstType == GstType.cgstSgst ? 'CGST/SGST' : 'IGST';
+    final gstLabel = order.gstType == GstType.cgstSgst ? 'CGST/SGST' : 'IGST';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: _C.surface,
-        borderRadius: BorderRadius.circular(20),
+        color: _C.surface, borderRadius: BorderRadius.circular(20),
         boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06),
             blurRadius: 16, offset: const Offset(0, 4))],
       ),
@@ -2172,35 +1762,28 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
         borderRadius: BorderRadius.circular(20),
         child: Column(children: [
           Container(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                   colors: [_C.primary, _C.primaryDk],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight),
+                  begin: Alignment.centerLeft, end: Alignment.centerRight),
             ),
             child: Row(children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(8)),
-                child: Text(
-                  'PO-${_savedOrders.length - index}',
-                  style: const TextStyle(color: Colors.white,
-                      fontSize: 11, fontWeight: FontWeight.w700),
-                ),
+                child: Text('PI-${_savedOrders.length - index}',
+                    style: const TextStyle(color: Colors.white,
+                        fontSize: 11, fontWeight: FontWeight.w700)),
               ),
               const SizedBox(width: 10),
               Expanded(child: Text(order.supplierName,
-                  style: const TextStyle(color: Colors.white,
-                      fontSize: 15, fontWeight: FontWeight.w700),
+                  style: const TextStyle(color: Colors.white, fontSize: 15,
+                      fontWeight: FontWeight.w700),
                   overflow: TextOverflow.ellipsis)),
               Text(DateFormat('dd MMM yyyy').format(order.date),
-                  style: const TextStyle(
-                      color: Colors.white70, fontSize: 10)),
+                  style: const TextStyle(color: Colors.white70, fontSize: 10)),
             ]),
           ),
           Padding(
@@ -2214,41 +1797,34 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
                   _Tag(label: order.globalTaxType == TaxType.exclusive
                       ? 'Excl. Tax' : 'Incl. Tax'),
                   if (order.tcsType != TcsType.noTcs)
-                    _Tag(
-                      label: order.tcsType == TcsType.tcs01
-                          ? 'TCS 0.1%' : 'TCS 1%',
-                      isGold: true,
-                    ),
+                    _Tag(label: order.tcsType == TcsType.tcs01
+                        ? 'TCS 0.1%' : 'TCS 1%', isGold: true),
                 ]),
                 if (order.supplierAddress.isNotEmpty) ...[
                   const SizedBox(height: 8),
                   Row(children: [
-                    const Icon(Icons.location_on_rounded,
-                        color: _C.textMid, size: 13),
+                    const Icon(Icons.location_on_rounded, color: _C.textMid, size: 13),
                     const SizedBox(width: 4),
                     Expanded(child: Text(order.supplierAddress,
-                        style: const TextStyle(color: _C.textMid,
-                            fontSize: 12, fontWeight: FontWeight.w500),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis)),
+                        style: const TextStyle(color: _C.textMid, fontSize: 12,
+                            fontWeight: FontWeight.w500),
+                        maxLines: 1, overflow: TextOverflow.ellipsis)),
                   ]),
                 ],
                 if (order.reference.isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Row(children: [
-                    const Icon(Icons.tag_rounded,
-                        color: _C.textMid, size: 13),
+                    const Icon(Icons.tag_rounded, color: _C.textMid, size: 13),
                     const SizedBox(width: 4),
                     Flexible(child: Text('Ref: ${order.reference}',
-                        style: const TextStyle(color: _C.textMid,
-                            fontSize: 12, fontWeight: FontWeight.w500),
+                        style: const TextStyle(color: _C.textMid, fontSize: 12,
+                            fontWeight: FontWeight.w500),
                         overflow: TextOverflow.ellipsis)),
                   ]),
                 ],
                 const SizedBox(height: 12),
                 Row(children: [
-                  _StatBox(label: 'Items',
-                      value: '${order.items.length}',
+                  _StatBox(label: 'Items', value: '${order.items.length}',
                       icon: Icons.list_rounded),
                   const SizedBox(width: 8),
                   _StatBox(label: 'Tax',
@@ -2257,8 +1833,7 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
                   if (order.discTotal > 0) ...[
                     const SizedBox(width: 8),
                     _StatBox(label: 'Discount',
-                        value:
-                        '₹${order.discTotal.toStringAsFixed(0)}',
+                        value: '₹${order.discTotal.toStringAsFixed(0)}',
                         icon: Icons.discount_rounded),
                   ],
                 ]),
@@ -2270,11 +1845,19 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
                         decoration: const BoxDecoration(
                             color: _C.primary, shape: BoxShape.circle)),
                     const SizedBox(width: 8),
-                    Expanded(child: Text(item.product,
-                        style: const TextStyle(color: _C.textDark,
-                            fontSize: 12, fontWeight: FontWeight.w500),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis)),
+                    Expanded(child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(item.product,
+                            style: const TextStyle(color: _C.textDark,
+                                fontSize: 12, fontWeight: FontWeight.w500),
+                            maxLines: 1, overflow: TextOverflow.ellipsis),
+                        if (item.batch.isNotEmpty)
+                          Text('Batch: ${item.batch}',
+                              style: const TextStyle(color: _C.textMid,
+                                  fontSize: 10, fontWeight: FontWeight.w400)),
+                      ],
+                    )),
                     const SizedBox(width: 8),
                     Text('₹${item.grandTotal.toStringAsFixed(2)}',
                         style: const TextStyle(color: _C.textDark,
@@ -2283,11 +1866,10 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
                 )),
                 if (order.items.length > 2) ...[
                   const SizedBox(height: 4),
-                  Text(
-                    '+ ${order.items.length - 2} more item${order.items.length - 2 == 1 ? '' : 's'}',
-                    style: const TextStyle(color: _C.primary,
-                        fontSize: 12, fontWeight: FontWeight.w600),
-                  ),
+                  Text('+ ${order.items.length - 2} more item'
+                      '${order.items.length - 2 == 1 ? '' : 's'}',
+                      style: const TextStyle(color: _C.primary,
+                          fontSize: 12, fontWeight: FontWeight.w600)),
                 ],
                 const SizedBox(height: 12),
                 const Divider(height: 1, color: _C.border),
@@ -2295,9 +1877,8 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Grand Total',
-                        style: TextStyle(color: _C.textMid,
-                            fontSize: 13, fontWeight: FontWeight.w600)),
+                    const Text('Grand Total', style: TextStyle(color: _C.textMid,
+                        fontSize: 13, fontWeight: FontWeight.w600)),
                     Text('₹${order.grandTotal.toStringAsFixed(2)}',
                         style: const TextStyle(color: _C.primary,
                             fontSize: 20, fontWeight: FontWeight.w900)),
@@ -2312,48 +1893,8 @@ class _PurchaseInvoiceScreenState extends State<PurchaseInvoiceScreen>
   }
 }
 
-// ── _StatBox ───────────────────────────────────────────────────────────────
-class _StatBox extends StatelessWidget {
-  final String label, value;
-  final IconData icon;
-  const _StatBox({
-    required this.label,
-    required this.value,
-    required this.icon,
-  });
+// ── Reusable Widgets ───────────────────────────────────────────────────────
 
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        decoration: BoxDecoration(
-            color: _C.primaryLt,
-            borderRadius: BorderRadius.circular(10)),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(icon, color: _C.primary, size: 13),
-          const SizedBox(width: 5),
-          Flexible(child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(value,
-                  style: const TextStyle(color: _C.primary,
-                      fontSize: 12, fontWeight: FontWeight.w800),
-                  overflow: TextOverflow.ellipsis, maxLines: 1),
-              Text(label,
-                  style: const TextStyle(color: _C.textMid,
-                      fontSize: 10, fontWeight: FontWeight.w500),
-                  overflow: TextOverflow.ellipsis, maxLines: 1),
-            ],
-          )),
-        ]),
-      ),
-    );
-  }
-}
-
-// ── Reusable widgets ───────────────────────────────────────────────────────
 class _FieldLabel extends StatelessWidget {
   final String label;
   const _FieldLabel({required this.label});
@@ -2366,7 +1907,6 @@ class _FieldLabel extends StatelessWidget {
 class _InputField extends StatelessWidget {
   final TextEditingController controller;
   final String                 hint;
-  final IconData               icon;
   final TextInputType          keyboardType;
   final ValueChanged<String>?  onChanged;
   final int                    maxLines;
@@ -2374,7 +1914,6 @@ class _InputField extends StatelessWidget {
   const _InputField({
     required this.controller,
     required this.hint,
-    required this.icon,
     this.keyboardType = TextInputType.text,
     this.onChanged,
     this.maxLines = 1,
@@ -2382,79 +1921,22 @@ class _InputField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => TextField(
-    controller: controller,
-    keyboardType: keyboardType,
-    onChanged: onChanged,
-    maxLines: maxLines,
+    controller: controller, keyboardType: keyboardType,
+    onChanged: onChanged, maxLines: maxLines,
     style: const TextStyle(color: _C.textDark, fontSize: 15,
         fontWeight: FontWeight.w500),
     decoration: InputDecoration(
       hintText: hint,
       hintStyle: const TextStyle(color: _C.textLight, fontSize: 14),
-      prefixIcon: Icon(icon, color: _C.primary, size: 20),
       filled: true, fillColor: _C.bg,
-      contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16, vertical: 14),
-      border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: _C.border)),
-      enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: _C.border)),
-      focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: _C.primary, width: 1.5)),
     ),
-  );
-}
-
-class _SheetField extends StatelessWidget {
-  final String                 label;
-  final TextEditingController  controller;
-  final IconData               icon;
-  final TextInputType          keyboardType;
-  final ValueChanged<String>?  onChanged;
-
-  const _SheetField({
-    required this.label,
-    required this.controller,
-    required this.icon,
-    this.keyboardType = TextInputType.text,
-    this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(label,
-          style: const TextStyle(color: _C.textMid, fontSize: 12,
-              fontWeight: FontWeight.w600)),
-      const SizedBox(height: 6),
-      TextField(
-        controller: controller,
-        keyboardType: keyboardType,
-        onChanged: onChanged,
-        style: const TextStyle(color: _C.textDark, fontSize: 14,
-            fontWeight: FontWeight.w500),
-        decoration: InputDecoration(
-          prefixIcon: Icon(icon, color: _C.primary, size: 18),
-          filled: true, fillColor: _C.bg,
-          contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12, vertical: 12),
-          border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: _C.border)),
-          enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: _C.border)),
-          focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                  color: _C.primary, width: 1.5)),
-        ),
-      ),
-    ],
   );
 }
 
@@ -2465,37 +1947,31 @@ class _TypeDropdown<T> extends StatelessWidget {
   final ValueChanged<T?>          onChanged;
 
   const _TypeDropdown({
-    required this.label,
-    required this.value,
-    required this.items,
-    required this.onChanged,
+    required this.label, required this.value,
+    required this.items, required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(label,
-          style: const TextStyle(color: _C.textMid, fontSize: 12,
-              fontWeight: FontWeight.w600)),
+      Text(label, style: const TextStyle(color: _C.textMid,
+          fontSize: 12, fontWeight: FontWeight.w600)),
       const SizedBox(height: 6),
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-        decoration: BoxDecoration(
-            color: _C.bg,
+        decoration: BoxDecoration(color: _C.bg,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: _C.border)),
         child: DropdownButtonHideUnderline(
           child: DropdownButton<T>(
-            value: value,
-            isExpanded: true,
+            value: value, isExpanded: true,
             icon: const Icon(Icons.keyboard_arrow_down_rounded,
                 color: _C.primary, size: 18),
             dropdownColor: _C.surface,
-            style: const TextStyle(color: _C.textDark, fontSize: 13,
-                fontWeight: FontWeight.w600),
-            items: items,
-            onChanged: onChanged,
+            style: const TextStyle(color: _C.textDark,
+                fontSize: 13, fontWeight: FontWeight.w600),
+            items: items, onChanged: onChanged,
           ),
         ),
       ),
@@ -2513,46 +1989,43 @@ class _SummaryRow extends StatelessWidget {
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label,
-            style: const TextStyle(color: _C.textMid, fontSize: 13,
-                fontWeight: FontWeight.w500)),
-        Text(value,
-            style: TextStyle(
-                color: isRed ? _C.red : _C.textDark,
-                fontSize: 13, fontWeight: FontWeight.w700)),
+        Text(label, style: const TextStyle(color: _C.textMid,
+            fontSize: 13, fontWeight: FontWeight.w500)),
+        Text(value, style: TextStyle(
+            color: isRed ? _C.red : _C.textDark,
+            fontSize: 13, fontWeight: FontWeight.w700)),
       ],
     ),
   );
 }
 
-class _InfoChip extends StatelessWidget {
+class _StatBox extends StatelessWidget {
+  final String label, value;
   final IconData icon;
-  final String   value;
-  final bool     isHighlight;
-  const _InfoChip({
-    required this.icon,
-    required this.value,
-    this.isHighlight = false,
-  });
+  const _StatBox({required this.label, required this.value, required this.icon});
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-    decoration: BoxDecoration(
-      color: isHighlight ? const Color(0xFFFFF3CD) : _C.surface,
-      borderRadius: BorderRadius.circular(8),
-      border: Border.all(
-          color: isHighlight ? _C.gold.withOpacity(0.5) : _C.border),
+  Widget build(BuildContext context) => Expanded(
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      decoration: BoxDecoration(color: _C.primaryLt,
+          borderRadius: BorderRadius.circular(10)),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Icon(icon, color: _C.primary, size: 13),
+        const SizedBox(width: 5),
+        Flexible(child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(value, style: const TextStyle(color: _C.primary,
+                fontSize: 12, fontWeight: FontWeight.w800),
+                overflow: TextOverflow.ellipsis, maxLines: 1),
+            Text(label, style: const TextStyle(color: _C.textMid,
+                fontSize: 10, fontWeight: FontWeight.w500),
+                overflow: TextOverflow.ellipsis, maxLines: 1),
+          ],
+        )),
+      ]),
     ),
-    child: Row(mainAxisSize: MainAxisSize.min, children: [
-      Icon(icon,
-          color: isHighlight ? _C.gold : _C.textMid, size: 11),
-      const SizedBox(width: 4),
-      Text(value,
-          style: TextStyle(
-              color: isHighlight ? _C.gold : _C.textDark,
-              fontSize: 11,
-              fontWeight: FontWeight.w600)),
-    ]),
   );
 }
 
@@ -2566,15 +2039,11 @@ class _Tag extends StatelessWidget {
     decoration: BoxDecoration(
       color: isGold ? const Color(0xFFFFF3CD) : _C.primaryLt,
       borderRadius: BorderRadius.circular(6),
-      border: Border.all(
-          color: isGold
-              ? _C.gold.withOpacity(0.4)
-              : _C.primary.withOpacity(0.2)),
+      border: Border.all(color: isGold
+          ? _C.gold.withOpacity(0.4) : _C.primary.withOpacity(0.2)),
     ),
-    child: Text(label,
-        style: TextStyle(
-            color: isGold ? _C.gold : _C.primary,
-            fontSize: 11,
-            fontWeight: FontWeight.w600)),
+    child: Text(label, style: TextStyle(
+        color: isGold ? _C.gold : _C.primary,
+        fontSize: 11, fontWeight: FontWeight.w600)),
   );
 }

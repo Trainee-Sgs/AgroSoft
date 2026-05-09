@@ -557,7 +557,6 @@ class _GRNScreenState extends State<GRNScreen> with TickerProviderStateMixin {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Discount column (wider — has inner dropdown)
                           Expanded(
                             flex: 3,
                             child: Column(
@@ -569,7 +568,6 @@ class _GRNScreenState extends State<GRNScreen> with TickerProviderStateMixin {
                                 const SizedBox(height: 6),
                                 Row(
                                   children: [
-                                    // % / ₹ picker
                                     Container(
                                       height: 46,
                                       padding: const EdgeInsets.symmetric(
@@ -634,7 +632,6 @@ class _GRNScreenState extends State<GRNScreen> with TickerProviderStateMixin {
 
                           const SizedBox(width: 10),
 
-                          // Tax column
                           Expanded(
                             flex: 2,
                             child: Column(
@@ -658,12 +655,7 @@ class _GRNScreenState extends State<GRNScreen> with TickerProviderStateMixin {
                         ],
                       ),
 
-                      const SizedBox(height: 8),
-
-                      // ── Tax inclusion info banner ─────────────────
-
-
-
+                      const SizedBox(height: 16),
 
                       // ── Item Total preview ────────────────────────
                       Container(
@@ -940,6 +932,7 @@ class _GRNScreenState extends State<GRNScreen> with TickerProviderStateMixin {
       _gstType             = GstType.cgstSgst;
       _globalTaxType       = TaxType.exclusive;
       _expandedCard        = 0;
+      // ✅ FIX: Switch to View Orders tab after save
       _showViewOrders      = true;
     });
 
@@ -962,7 +955,7 @@ class _GRNScreenState extends State<GRNScreen> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _C.bg,
-      resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomInset: false,
       body: Column(
         children: [
           _buildHeader(),
@@ -1135,7 +1128,7 @@ class _GRNScreenState extends State<GRNScreen> with TickerProviderStateMixin {
             _buildSummaryCard(),
             const SizedBox(height: 16),
           ],
-          const SizedBox(height: 100),
+          const SizedBox(height: 20),
         ],
       ),
     );
@@ -1525,169 +1518,229 @@ class _GRNScreenState extends State<GRNScreen> with TickerProviderStateMixin {
             separatorBuilder: (_, __) =>
                 Divider(height: 1, indent: 16, endIndent: 16, color: _C.border),
             itemBuilder: (_, i) {
-              final item     = _items[i];
-              final selected = _selectedIndex == i;
-              return GestureDetector(
-                onTap: () =>
-                    setState(() => _selectedIndex = selected ? null : i),
-                onDoubleTap: () =>
-                    _showItemSheet(existing: item, editIndex: i),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 5),
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: selected ? _C.primaryLt : _C.bg,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: selected
-                          ? _C.primary.withOpacity(0.4) : _C.border,
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 26, height: 26,
-                            decoration: BoxDecoration(
-                              color: selected
-                                  ? _C.primary
-                                  : _C.primary.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Center(
-                              child: Text('${i + 1}',
-                                  style: TextStyle(
-                                      color: selected
-                                          ? Colors.white : _C.primary,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w800)),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(item.product,
-                                    style: const TextStyle(
-                                        color: _C.textDark, fontSize: 13,
-                                        fontWeight: FontWeight.w700),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis),
-                                if (item.batch.isNotEmpty) ...[
-                                  const SizedBox(height: 3),
-                                  Row(children: [
-                                    const Icon(Icons.qr_code_rounded,
-                                        color: _C.textMid, size: 11),
-                                    const SizedBox(width: 4),
-                                    Text('Batch: ${item.batch}',
-                                        style: const TextStyle(
-                                            color: _C.textMid,
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w500)),
-                                  ]),
-                                ],
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text('₹${item.grandTotal.toStringAsFixed(2)}',
-                                  style: const TextStyle(
-                                      color: _C.primary, fontSize: 14,
-                                      fontWeight: FontWeight.w900)),
-                              Container(
-                                margin: const EdgeInsets.only(top: 2),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: item.taxType == TaxType.inclusive
-                                      ? const Color(0xFFE8F5ED)
-                                      : const Color(0xFFFFF3CD),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  item.taxType == TaxType.inclusive
-                                      ? 'incl. tax' : 'excl. tax',
-                                  style: TextStyle(
-                                    color: item.taxType == TaxType.inclusive
-                                        ? _C.primary : _C.gold,
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Wrap(
-                        spacing: 6, runSpacing: 4,
-                        children: [
-                          _InfoChip(
-                              value: '₹${item.price.toStringAsFixed(0)}'),
-                          _InfoChip(value: '× ${item.quantity}'),
-                          if (item.discountValue > 0)
-                            _InfoChip(
-                              value: item.discountIsPercent
-                                  ? '${item.discountValue.toStringAsFixed(0)}% off'
-                                  : '₹${item.discountValue.toStringAsFixed(0)} off',
-                              isHighlight: true,
-                            ),
-                          _InfoChip(
-                              value:
-                              '${item.taxRate.toStringAsFixed(0)}% tax'),
-                          _InfoChip(value: 'double-tap to edit'),
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _items.removeAt(i);
-                                _selectedIndex = null;
-                              });
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: _C.red.withOpacity(0.08),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                    color: _C.red.withOpacity(0.4)),
-                              ),
-                              child: const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.delete_outline_rounded,
-                                      color: _C.red, size: 11),
-                                  SizedBox(width: 4),
-                                  Text('remove item',
-                                      style: TextStyle(
-                                          color: _C.red,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600)),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              );
+              final item = _items[i];
+              return _buildItemCard(item, i);
             },
           ),
           const SizedBox(height: 12),
         ],
+      ),
+    );
+  }
+
+  // ── Single Item Card ───────────────────────────────────────────────────────
+  // FIX 1: Tax badge aligned flush to the right edge under the price,
+  //         using crossAxisAlignment.end on the right Column (no change needed,
+  //         already correct) — but we wrap the right Column in an
+  //         IntrinsicWidth so it never overflows horizontally.
+  Widget _buildItemCard(OrderItem item, int i) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
+      decoration: BoxDecoration(
+        color: _C.bg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _C.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+
+          // ── Row 1: Number + Product name + Price + tax tag ────────────────
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Serial number badge
+              Container(
+                width: 24, height: 24,
+                decoration: BoxDecoration(
+                  color: _C.primary.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(7),
+                ),
+                child: Center(
+                  child: Text('${i + 1}',
+                      style: const TextStyle(
+                          color: _C.primary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800)),
+                ),
+              ),
+              const SizedBox(width: 8),
+
+              // Product name — Expanded so it never pushes right column off screen
+              Expanded(
+                child: Text(
+                  item.product,
+                  style: const TextStyle(
+                      color: _C.textDark,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      height: 1.3),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+
+              // ✅ FIX: Right column — price + tax badge, right-aligned,
+              //    wrapped in IntrinsicWidth so it takes only what it needs.
+              IntrinsicWidth(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '₹${item.grandTotal.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                          color: _C.primary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w900),
+                    ),
+                    const SizedBox(height: 3),
+                    // ✅ FIX: Align badge to match price width
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: item.taxType == TaxType.inclusive
+                              ? const Color(0xFFE8F5ED)
+                              : const Color(0xFFFFF3CD),
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: Text(
+                          item.taxType == TaxType.inclusive
+                              ? 'incl. tax' : 'excl. tax',
+                          style: TextStyle(
+                            color: item.taxType == TaxType.inclusive
+                                ? _C.primary : _C.gold,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          // ── Row 2: Batch number ────────────────────────────────────────────
+          if (item.batch.isNotEmpty) ...[
+            const SizedBox(height: 5),
+            Padding(
+              padding: const EdgeInsets.only(left: 32),
+              child: Row(
+                children: [
+                  const Icon(Icons.qr_code_rounded,
+                      color: _C.textMid, size: 11),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Batch: ${item.batch}',
+                    style: const TextStyle(
+                        color: _C.textMid,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          // ── Row 3: Action chips ────────────────────────────────────────────
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              // Edit icon button
+              GestureDetector(
+                onTap: () => _showItemSheet(existing: item, editIndex: i),
+                child: Container(
+                  width: 28, height: 28,
+                  decoration: BoxDecoration(
+                    color: _C.primaryLt,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                        color: _C.primary.withOpacity(0.3)),
+                  ),
+                  child: const Icon(Icons.edit_rounded,
+                      color: _C.primary, size: 14),
+                ),
+              ),
+              const SizedBox(width: 3),
+
+              // Info chips — scrollable
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _chip('₹${item.price.toStringAsFixed(0)}'),
+                      const SizedBox(width: 3),
+                      _chip('×${item.quantity}'),
+                      if (item.discountValue > 0) ...[
+                        const SizedBox(width: 3),
+                        _chip(
+                          item.discountIsPercent
+                              ? '${item.discountValue.toStringAsFixed(0)}%off'
+                              : '₹${item.discountValue.toStringAsFixed(0)} off',
+                          isGold: true,
+                        ),
+                      ],
+                      const SizedBox(width: 3),
+                      _chip('${item.taxRate.toStringAsFixed(0)}%tax'),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 4),
+
+              // Delete icon button
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _items.removeAt(i);
+                    _selectedIndex = null;
+                  });
+                },
+                child: Container(
+                  width: 28, height: 28,
+                  decoration: BoxDecoration(
+                    color: _C.red.withOpacity(0.08),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                        color: _C.red.withOpacity(0.35)),
+                  ),
+                  child: const Icon(Icons.delete_outline_rounded,
+                      color: _C.red, size: 14),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Chip helper ────────────────────────────────────────────────────────────
+  static Widget _chip(String label, {bool isGold = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: isGold ? const Color(0xFFFFF3CD) : _C.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+            color: isGold
+                ? _C.gold.withOpacity(0.5) : _C.border),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+            color: isGold ? _C.gold : _C.textDark,
+            fontSize: 11,
+            fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -1746,7 +1799,9 @@ class _GRNScreenState extends State<GRNScreen> with TickerProviderStateMixin {
     );
   }
 
-  // ── Bottom Bar ─────────────────────────────────────────────────────────────
+  // ── Bottom Bar — FIXED overflow ────────────────────────────────────────────
+  // FIX 2: Reduced inner horizontal padding + used FittedBox on amount text
+  //         so it never overflows on narrow screens.
   Widget _buildBottomBar() {
     return SafeArea(
       top: false,
@@ -1778,41 +1833,48 @@ class _GRNScreenState extends State<GRNScreen> with TickerProviderStateMixin {
               onTap: _save,
               borderRadius: BorderRadius.circular(20),
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 20, vertical: 14),
+                // ✅ FIX: reduced horizontal padding from 20→14 to prevent overflow
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 child: Row(
                   children: [
-                    // Left — amount
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text(
-                          'TOTAL AMOUNT',
-                          style: TextStyle(
-                            color: Colors.white60,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 1.2,
+                    // Left: label + amount — constrained so it doesn't push button out
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            'TOTAL AMOUNT',
+                            style: TextStyle(
+                              color: Colors.white60,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 1.2,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '₹${_grandTotal.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.5,
+                          const SizedBox(height: 2),
+                          // ✅ FIX: FittedBox ensures large amounts scale down
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              '₹${_grandTotal.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    const Spacer(),
-                    // Right — save button
+                    const SizedBox(width: 10),
+                    // Right: Save button — fixed width so it never clips
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 13),
+                          horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.18),
                         borderRadius: BorderRadius.circular(14),
@@ -1827,18 +1889,18 @@ class _GRNScreenState extends State<GRNScreen> with TickerProviderStateMixin {
                                 ? Icons.assignment_return_rounded
                                 : Icons.save_rounded,
                             color: Colors.white,
-                            size: 18,
+                            size: 17,
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 7),
                           Text(
                             _transferType == TransferType.returnOrder
                                 ? 'SAVE RETURN'
                                 : 'SAVE ORDER',
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 13,
+                              fontSize: 12,
                               fontWeight: FontWeight.w800,
-                              letterSpacing: 0.6,
+                              letterSpacing: 0.5,
                             ),
                           ),
                         ],
@@ -2218,27 +2280,6 @@ class _SummaryRow extends StatelessWidget {
                 fontSize: 13, fontWeight: FontWeight.w700)),
       ],
     ),
-  );
-}
-
-class _InfoChip extends StatelessWidget {
-  final String value;
-  final bool   isHighlight;
-  const _InfoChip({required this.value, this.isHighlight = false});
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-    decoration: BoxDecoration(
-      color: isHighlight ? const Color(0xFFFFF3CD) : _C.surface,
-      borderRadius: BorderRadius.circular(8),
-      border: Border.all(
-          color: isHighlight ? _C.gold.withOpacity(0.5) : _C.border),
-    ),
-    child: Text(value,
-        style: TextStyle(
-            color: isHighlight ? _C.gold : _C.textDark,
-            fontSize: 11,
-            fontWeight: FontWeight.w600)),
   );
 }
 
