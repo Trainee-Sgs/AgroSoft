@@ -74,26 +74,30 @@ class _LoginScreenState extends State<LoginScreen>
     super.dispose();
   }
 
-  // ── Calls OtpVerifyProvider.login() → on success navigates to OTP screen ──
+  // ── Calls LoginProvider.login() → on success navigates to OTP screen ──────
   Future<void> _proceed() async {
     final mobile = _phoneCtrl.text.trim();
-    if (mobile.length != 10) {
+    if (mobile.length !=  10) {
       _snack('Enter a valid 10-digit mobile number', error: true);
       HapticFeedback.mediumImpact();
       return;
     }
 
-    final auth = context.read<OtpVerifyProvider>();
-    final ok   = await auth.login(mobile: mobile);
+    final authProvider = context.read<AuthProvider>();          // ✅ LoginProvider
+    final ok   = await authProvider.login(mobile: mobile);
 
     if (!mounted) return;
 
-    if (ok) {
+    if (ok && authProvider.userId != null) {
+      context.read<OtpVerifyProvider>().setLedId(
+        authProvider.userId!,
+        mobile: mobile,
+      );
       Navigator.push(context, _slideRoute(OtpScreen(phone: mobile)));
-    } else {
+    }else {
       HapticFeedback.mediumImpact();
       _snack(
-        auth.message.isNotEmpty ? auth.message : 'Login failed. Try again.',
+        authProvider.message.isNotEmpty ? authProvider.message : 'Login failed. Try again.',
         error: true,
       );
     }
@@ -114,7 +118,7 @@ class _LoginScreenState extends State<LoginScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isLoading = context.watch<OtpVerifyProvider>().isLoading;
+    final isLoading = context.watch<AuthProvider>().isLoading;  // ✅ LoginProvider
     final size      = MediaQuery.of(context).size;
 
     return Scaffold(
