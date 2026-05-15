@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_theme.dart';
+import 'package:provider/provider.dart';
+import '../provider_module/dropdown_provider.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // SEGMENT 1 — Color Palette
@@ -72,7 +74,7 @@ class SavedQuotation {
   final String   reference;
   final DateTime date;
   final DateTime dueDate;
-  final GstType  gstType;
+  final GstType  gstType; 
   final TaxInclusion taxInclusion;
   final List<OrderItem> items;
 
@@ -265,6 +267,8 @@ class _SalesQuotationScreenState extends State<SalesQuotationScreen>
   final _customerAddressCtrl = TextEditingController();
   final _referenceCtrl       = TextEditingController();
 
+  String?      _selectedGstId; 
+  String?      _selectedTaxId;
   GstType      _gstType      = GstType.cgstSgst;
   TaxInclusion _taxInclusion = TaxInclusion.exclude;
   DateTime     _selectedDate = DateTime.now();
@@ -278,6 +282,31 @@ class _SalesQuotationScreenState extends State<SalesQuotationScreen>
   void initState() {
     super.initState();
     _addNewForm();
+    
+    // Fetch GST and Tax types from API
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final dropdown = context.read<DropdownProvider>();
+      
+      dropdown.fetchGstTypes().then((_) {
+        final types = dropdown.gstTypes;
+        if (types.isNotEmpty && _selectedGstId == null) {
+          setState(() {
+            _selectedGstId = types.first.value;
+            _gstType = _selectedGstId == '2' ? GstType.igst : GstType.cgstSgst;
+          });
+        }
+      });
+
+      dropdown.fetchTaxTypes().then((_) {
+        final types = dropdown.taxTypes;
+        if (types.isNotEmpty && _selectedTaxId == null) {
+          setState(() {
+            _selectedTaxId = types.first.value;
+            _taxInclusion = _selectedTaxId == '1' ? TaxInclusion.include : TaxInclusion.exclude;
+          });
+        }
+      });
+    });
   }
 
   @override
@@ -386,7 +415,7 @@ class _SalesQuotationScreenState extends State<SalesQuotationScreen>
       _items.clear();
       _selectedDate    = DateTime.now();
       _dueDate         = DateTime.now().add(const Duration(days: 1));
-      _gstType         = GstType.cgstSgst;
+      // _gstType      = GstType.cgstSgst; // Reset logic needs to be dynamic
       _taxInclusion    = TaxInclusion.exclude;
       _openSection     = _kTypes;
       _showViewQuotations = true;
@@ -723,26 +752,54 @@ class _SalesQuotationScreenState extends State<SalesQuotationScreen>
     return Row(
       children: [
         Expanded(
-          child: _TypeDropdown<GstType>(
-            label: 'GST Type',
-            value: _gstType,
-            items: const [
-              DropdownMenuItem(value: GstType.cgstSgst, child: Text('CGST/SGST')),
-              DropdownMenuItem(value: GstType.igst, child: Text('IGST')),
-            ],
-            onChanged: (v) { if (v != null) setState(() => _gstType = v); },
+          child: Consumer<DropdownProvider>(
+            builder: (context, provider, child) {
+              return _TypeDropdown<String?>(
+                label: 'GST Type',
+                value: _selectedGstId,
+                isLoading: provider.isLoading,
+                items: provider.gstTypes.map((item) {
+                  return DropdownMenuItem(
+                    value: item.value,
+                    child: Text(item.name),
+                  );
+                }).toList(),
+                onChanged: (v) {
+                  if (v != null) {
+                    setState(() {
+                      _selectedGstId = v;
+                      _gstType = v == '2' ? GstType.igst : GstType.cgstSgst;
+                    });
+                  }
+                },
+              );
+            },
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: _TypeDropdown<TaxInclusion>(
-            label: 'Tax Inclusion',
-            value: _taxInclusion,
-            items: const [
-              DropdownMenuItem(value: TaxInclusion.exclude, child: Text('Exclude Tax')),
-              DropdownMenuItem(value: TaxInclusion.include, child: Text('Include Tax')),
-            ],
-            onChanged: (v) { if (v != null) setState(() => _taxInclusion = v); },
+          child: Consumer<DropdownProvider>(
+            builder: (context, provider, child) {
+              return _TypeDropdown<String?>(
+                label: 'Tax Inclusion',
+                value: _selectedTaxId,
+                isLoading: provider.isLoading,
+                items: provider.taxTypes.map((item) {
+                  return DropdownMenuItem(
+                    value: item.value,
+                    child: Text(item.name),
+                  );
+                }).toList(),
+                onChanged: (v) {
+                  if (v != null) {
+                    setState(() {
+                      _selectedTaxId = v;
+                      _taxInclusion = v == '1' ? TaxInclusion.include : TaxInclusion.exclude;
+                    });
+                  }
+                },
+              );
+            },
           ),
         ),
       ],
@@ -2080,12 +2137,14 @@ class _TypeDropdown<T> extends StatelessWidget {
   final T                         value;
   final List<DropdownMenuItem<T>> items;
   final ValueChanged<T?>          onChanged;
+  final bool                      isLoading;
 
   const _TypeDropdown({
     required this.label,
     required this.value,
     required this.items,
     required this.onChanged,
+    this.isLoading = false,
   });
 
   @override
@@ -2101,15 +2160,17 @@ class _TypeDropdown<T> extends StatelessWidget {
           color: _C.bg, borderRadius: BorderRadius.circular(12), border: Border.all(color: _C.border),
         ),
         child: DropdownButtonHideUnderline(
-          child: DropdownButton<T>(
-            value: value,
-            isExpanded: true,
-            icon: const Icon(Icons.keyboard_arrow_down_rounded, color: _C.primary, size: 18),
-            dropdownColor: _C.surface,
-            style: const TextStyle(color: _C.textDark, fontSize: 13, fontWeight: FontWeight.w600),
-            items: items,
-            onChanged: onChanged,
-          ),
+          child: isLoading 
+            ? const Center(child: SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: _C.primary)))
+            : DropdownButton<T>(
+                value: value,
+                isExpanded: true,
+                icon: const Icon(Icons.keyboard_arrow_down_rounded, color: _C.primary, size: 18),
+                dropdownColor: _C.surface,
+                style: const TextStyle(color: _C.textDark, fontSize: 13, fontWeight: FontWeight.w600),
+                items: items,
+                onChanged: onChanged,
+              ),
         ),
       ),
     ],

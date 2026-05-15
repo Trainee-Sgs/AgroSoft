@@ -71,4 +71,22 @@ class SharedPrefService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
   }
+
+  // ── Debug Print All ────────────────────────────────────────────────────────
+  static Future<void> debugPrintAll() async {
+    final prefs = await SharedPreferences.getInstance();
+    final keys = prefs.getKeys();
+    
+    print('══════════════════════════════════════════════');
+    print('  SHARED PREFERENCES DUMP');
+    print('══════════════════════════════════════════════');
+    if (keys.isEmpty) {
+      print('  (Empty)');
+    } else {
+      for (String key in keys) {
+        print('  $key : ${prefs.get(key)}');
+      }
+    }
+    print('══════════════════════════════════════════════');
+  }
 }

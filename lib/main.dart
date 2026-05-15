@@ -7,6 +7,7 @@ import 'theme/app_theme.dart';
 import 'screens/splash_screen.dart';
 import 'provider_module/otp_verify_provider.dart';
 import 'provider_module/ledger_provider.dart';
+import 'provider_module/dropdown_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,6 +41,7 @@ class AgrosoftApp extends StatelessWidget {
           create: (_) => OtpVerifyProvider(),
         ),
         ChangeNotifierProvider(create: (_) => LedgerProvider()),
+        ChangeNotifierProvider(create: (_) => DropdownProvider()),
       ],
       child: MaterialApp(
         title: 'AgroSoft',
