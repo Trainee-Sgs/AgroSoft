@@ -8,10 +8,12 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import 'dart:math' as math;
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 
 import '../provider_module/login_provider.dart';
 import '../provider_module/otp_verify_provider.dart';
@@ -74,33 +76,72 @@ class _LoginScreenState extends State<LoginScreen>
     super.dispose();
   }
 
-  // ── Calls LoginProvider.login() → on success navigates to OTP screen ──────
+  // ── Calls OtpVerifyProvider.login() → on success navigates to OTP screen ──
   Future<void> _proceed() async {
     final mobile = _phoneCtrl.text.trim();
-    if (mobile.length !=  10) {
+    if (mobile.length != 10) {
       _snack('Enter a valid 10-digit mobile number', error: true);
       HapticFeedback.mediumImpact();
       return;
     }
 
-    final authProvider = context.read<AuthProvider>();          // ✅ LoginProvider
-    final ok   = await authProvider.login(mobile: mobile);
+    final auth = context.read<OtpVerifyProvider>();
+    final data = await _fetchDeviceData();
+
+    // ── 3. Call API (Type 45) ───────────────────────────────────────────────
+    final ok = await auth.login(
+      mobile:    mobile,
+      deviceId:  data['deviceId'],
+      latitude:  data['latitude'],
+      longitude: data['longitude'],
+      token:     '32', // Using placeholder as per user's example
+    );
 
     if (!mounted) return;
 
-    if (ok && authProvider.userId != null) {
-      context.read<OtpVerifyProvider>().setLedId(
-        authProvider.userId!,
-        mobile: mobile,
-      );
+    if (ok) {
       Navigator.push(context, _slideRoute(OtpScreen(phone: mobile)));
-    }else {
+    } else {
       HapticFeedback.mediumImpact();
       _snack(
-        authProvider.message.isNotEmpty ? authProvider.message : 'Login failed. Try again.',
+        auth.message.isNotEmpty ? auth.message : 'Login failed. Try again.',
         error: true,
       );
     }
+  }
+
+  // ── Helper to fetch device/location data ──────────────────────────────────
+  Future<Map<String, dynamic>> _fetchDeviceData() async {
+    String deviceId = '0';
+    try {
+      final info = DeviceInfoPlugin();
+      if (Platform.isAndroid) {
+        final android = await info.androidInfo;
+        deviceId = android.id;
+      } else if (Platform.isIOS) {
+        final ios = await info.iosInfo;
+        deviceId = ios.identifierForVendor ?? '0';
+      }
+    } catch (_) {}
+
+    double lat = 0.0;
+    double lng = 0.0;
+    try {
+      final pos = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      ).timeout(const Duration(seconds: 5));
+      lat = pos.latitude;
+      lng = pos.longitude;
+      LocationService.lt = lat;
+      LocationService.ln = lng;
+      LocationService.fetched = true;
+    } catch (_) {}
+
+    return {
+      'deviceId':  deviceId,
+      'latitude':  lat,
+      'longitude': lng,
+    };
   }
 
   void _snack(String msg, {bool error = false}) {
@@ -118,7 +159,7 @@ class _LoginScreenState extends State<LoginScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isLoading = context.watch<AuthProvider>().isLoading;  // ✅ LoginProvider
+    final isLoading = context.watch<OtpVerifyProvider>().isLoading;
     final size      = MediaQuery.of(context).size;
 
     return Scaffold(
@@ -522,7 +563,16 @@ class _OtpScreenState extends State<OtpScreen>
     });
 
     final auth = context.read<OtpVerifyProvider>();
-    final ok   = await auth.login(mobile: widget.phone);
+    // Fetch fresh device/location data for the resend request
+    final data = await _fetchResendDeviceData();
+
+    final ok = await auth.login(
+      mobile:    widget.phone,
+      deviceId:  data['deviceId'],
+      latitude:  data['latitude'],
+      longitude: data['longitude'],
+      token:     '32',
+    );
 
     if (!mounted) return;
 
@@ -539,6 +589,40 @@ class _OtpScreenState extends State<OtpScreen>
     ));
 
     _startResendTimer();
+  }
+
+  // ── Helper for Resend (since it's inside _OtpScreenState) ────────────────
+  Future<Map<String, dynamic>> _fetchResendDeviceData() async {
+    String deviceId = '0';
+    try {
+      final info = DeviceInfoPlugin();
+      if (Platform.isAndroid) {
+        final android = await info.androidInfo;
+        deviceId = android.id;
+      } else if (Platform.isIOS) {
+        final ios = await info.iosInfo;
+        deviceId = ios.identifierForVendor ?? '0';
+      }
+    } catch (_) {}
+
+    double lat = 0.0;
+    double lng = 0.0;
+    try {
+      final pos = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      ).timeout(const Duration(seconds: 5));
+      lat = pos.latitude;
+      lng = pos.longitude;
+      LocationService.lt = lat;
+      LocationService.ln = lng;
+      LocationService.fetched = true;
+    } catch (_) {}
+
+    return {
+      'deviceId':  deviceId,
+      'latitude':  lat,
+      'longitude': lng,
+    };
   }
 
   @override

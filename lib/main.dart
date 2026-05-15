@@ -6,6 +6,7 @@ import 'provider_module/login_provider.dart';
 import 'theme/app_theme.dart';
 import 'screens/splash_screen.dart';
 import 'provider_module/otp_verify_provider.dart';
+import 'provider_module/ledger_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,6 +39,7 @@ class AgrosoftApp extends StatelessWidget {
         ChangeNotifierProvider<OtpVerifyProvider>(
           create: (_) => OtpVerifyProvider(),
         ),
+        ChangeNotifierProvider(create: (_) => LedgerProvider()),
       ],
       child: MaterialApp(
         title: 'AgroSoft',

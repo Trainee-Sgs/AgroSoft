@@ -1,16 +1,26 @@
 // ─────────────────────────────────────────────────────────────────────────────
 //  otp_verify_provider.dart
+//  Single provider handling Login (type=1) + OTP Verify (type=2) + Logout.
+//
 //  Fixed:
-//    • URL: POST to _baseUrl directly (not _baseUrl/login)
-//    • Login body matches what the API actually expects
-//    • setLedId() added — LoginScreen AuthProvider.login() result-ஐ pass பண்ண
+//    • verifyOtp() no longer accepts latitude/longitude parameters —
+//      it reads them from the LocationService static cache (set by the UI
+//      before calling verifyOtp).
+//
+//  API payload for type=2:
+//    type     : '2'
+//    led_id   : from step-1 response
+//    otp      : 6-digit user input
+//    device_id: from device_info_plus
+//    lt       : from LocationService cache
+//    ln       : from LocationService cache
+//    token    : from firebase_messaging
 // ─────────────────────────────────────────────────────────────────────────────
 
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
-import '../provider_module/location_service.dart';
+import 'location_service.dart';
 import '../widgets/shared_preference_screen.dart';
 
 class OtpVerifyProvider extends ChangeNotifier {
@@ -25,101 +35,76 @@ class OtpVerifyProvider extends ChangeNotifier {
   int?   get ledId     => _ledId;
   String get mobile    => _mobile;
 
-  static const String _baseUrl =
-      'https://agrosoftware.in/api/mobile/index.php';
+  static const String _baseUrl = 'https://agrosoftware.in/api/mobile/index_new.php';
 
   // ══════════════════════════════════════════════════════════════════════════
-  //  Set ledId externally
-  //  LoginScreen → AuthProvider.login() → id: 659 → setLedId(659)
+  //  STEP 1 — Login  (type=1 → sends OTP to mobile)
   // ══════════════════════════════════════════════════════════════════════════
-  void setLedId(int id, {String mobile = ''}) {
-    _ledId  = id;
-    if (mobile.isNotEmpty) _mobile = mobile;
-    debugPrint('════════════════════════════════════════');
-    debugPrint('[OtpVerifyProvider] setLedId called');
-    debugPrint('[OtpVerifyProvider] _ledId  = $_ledId');
-    debugPrint('[OtpVerifyProvider] _mobile = $_mobile');
-    debugPrint('════════════════════════════════════════');
-    notifyListeners();
-  }
-
-  // ══════════════════════════════════════════════════════════════════════════
-  //  STEP 1 — Login (sends OTP)
-  // ══════════════════════════════════════════════════════════════════════════
-  Future<bool> login({required String mobile}) async {
+  Future<bool> login({
+    required String mobile,
+    required String deviceId,
+    double latitude  = 0.0,
+    double longitude = 0.0,
+    String token     = '',
+  }) async {
     _setLoading(true);
     _message = '';
 
     final Map<String, String> body = {
-      'type'  : '1',
-      'mobile': mobile,
+      'type'     : '45',
+      'device_id': deviceId,
+      'mobile'   : mobile,
+      'lt'       : latitude.toString(),
+      'ln'       : longitude.toString(),
+      'token'    : token,
     };
 
     debugPrint('════════════════════════════════════════');
-    debugPrint('[LOGIN] REQUEST');
-    debugPrint('[LOGIN] URL  : $_baseUrl');
-    debugPrint('[LOGIN] Body : $body');
+    debugPrint('[LOGIN] REQUEST  → $_baseUrl');
+    debugPrint('[LOGIN] Body     : $body');
     debugPrint('════════════════════════════════════════');
 
     try {
       final response = await http.post(
-        Uri.parse(_baseUrl),
+        Uri.parse('$_baseUrl'),
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: body,
       ).timeout(const Duration(seconds: 15));
 
-      debugPrint('[LOGIN] Status Code : ${response.statusCode}');
-      debugPrint('[LOGIN] Raw Body    : ${response.body}');
-
       final data = jsonDecode(response.body) as Map<String, dynamic>;
 
-      debugPrint('[LOGIN] Parsed JSON : $data');
-      debugPrint('[LOGIN] error       : ${data['error']}');
-      debugPrint('[LOGIN] error_msg   : ${data['error_msg']}');
-      debugPrint('[LOGIN] led_id      : ${data['led_id']}');
-      debugPrint('════════════════════════════════════════');
+      debugPrint('[LOGIN] Status  : ${response.statusCode}');
+      debugPrint('[LOGIN] Response: $data');
 
       if (response.statusCode == 200 && data['error'] == false) {
-        _ledId   = data['led_id'] as int;
+        _ledId   = data['id'] as int?; 
         _mobile  = mobile;
         _message = data['error_msg'] ?? 'OTP sent successfully';
-
-        debugPrint('[LOGIN] ✅ SUCCESS  _ledId=$_ledId');
+        debugPrint('[LOGIN] ✅ led_id=$_ledId  mobile=$_mobile');
         _setLoading(false);
         return true;
       } else {
         _message = data['error_msg'] ?? 'Login failed. Please try again.';
-        debugPrint('[LOGIN] ❌ FAILED — $_message');
+        debugPrint('[LOGIN] ❌ $_message');
         _setLoading(false);
         return false;
       }
-    } catch (e, stack) {
+    } catch (e, st) {
       _message = 'Network error. Please check your connection.';
-      debugPrint('[LOGIN] ❌ EXCEPTION : $e');
-      debugPrint('[LOGIN] STACKTRACE  : $stack');
+      debugPrint('[LOGIN] ❌ EXCEPTION: $e\n$st');
       _setLoading(false);
       return false;
     }
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  //  STEP 2 — Verify OTP
+  //  STEP 2 — Verify OTP  (type=2)
   // ══════════════════════════════════════════════════════════════════════════
   Future<bool> verifyOtp({
     required String otp,
     required String deviceId,
     required String fcmToken,
   }) async {
-
-    final double lat = LocationService.fetched ? LocationService.lt : 0.0;
-    final double lng = LocationService.fetched ? LocationService.ln : 0.0;
-
-    debugPrint('════════════════════════════════════════');
-    debugPrint('[LOCATION] fetched : ${LocationService.fetched}');
-    debugPrint('[LOCATION] lt      : ${LocationService.lt}');
-    debugPrint('[LOCATION] ln      : ${LocationService.ln}');
-    debugPrint('[LOCATION] error   : ${LocationService.error}');
-    debugPrint('════════════════════════════════════════');
 
     if (_ledId == null) {
       _message = 'Session expired. Please login again.';
@@ -130,6 +115,9 @@ class OtpVerifyProvider extends ChangeNotifier {
 
     _setLoading(true);
     _message = '';
+
+    final double lat = LocationService.fetched ? LocationService.lt : 0.0;
+    final double lng = LocationService.fetched ? LocationService.ln : 0.0;
 
     final Map<String, String> body = {
       'type'     : '2',
@@ -142,69 +130,53 @@ class OtpVerifyProvider extends ChangeNotifier {
     };
 
     debugPrint('════════════════════════════════════════');
-    debugPrint('[VERIFY OTP] REQUEST');
-    debugPrint('[VERIFY OTP] URL  : $_baseUrl');
-    debugPrint('[VERIFY OTP] Body : $body');
+    debugPrint('[VERIFY OTP] REQUEST  → $_baseUrl');
+    debugPrint('[VERIFY OTP] Body     : $body');
+    debugPrint('[LOCATION]   fetched=${LocationService.fetched}  lt=$lat  ln=$lng');
     debugPrint('════════════════════════════════════════');
 
     try {
       final response = await http.post(
-        Uri.parse(_baseUrl),
+        Uri.parse('$_baseUrl'),
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: body,
       ).timeout(const Duration(seconds: 15));
 
-      debugPrint('[VERIFY OTP] Status Code : ${response.statusCode}');
-      debugPrint('[VERIFY OTP] Raw Body    : ${response.body}');
-
       final data = jsonDecode(response.body) as Map<String, dynamic>;
 
-      debugPrint('[VERIFY OTP] Parsed JSON : $data');
-      debugPrint('[VERIFY OTP] error       : ${data['error']}');
-      debugPrint('[VERIFY OTP] error_msg   : ${data['error_msg']}');
-      debugPrint('[VERIFY OTP] uid         : ${data['uid']}');
-      debugPrint('[VERIFY OTP] role_id     : ${data['role_id']}');
-      debugPrint('════════════════════════════════════════');
+      debugPrint('[VERIFY OTP] Status  : ${response.statusCode}');
+      debugPrint('[VERIFY OTP] Response: $data');
 
       if (response.statusCode == 200 && data['error'] == false) {
-        final uid    = data['uid']     as int;
-        final roleId = data['role_id'] as int? ?? 0;
-        final mob    = data['mobile']  as String? ?? _mobile;
+        final uid    = data['uid']      as int;
+        final roleId = (data['role_id'] as int?)    ?? 0;
+        final mob    = (data['mobile']  as String?) ?? _mobile;
 
+        // ── Persist everything to SharedPreferences ────────────────────────
         await SharedPrefService.saveLoginData(
           userId   : uid,
           mobile   : mob,
           deviceId : deviceId,
           token    : fcmToken,
           type     : roleId.toString(),
+          ledId    : _ledId!,
           latitude : lat,
           longitude: lng,
         );
 
-        debugPrint('════════════════════════════════════════');
-        debugPrint('[SHARED PREFS] SAVED');
-        debugPrint('[SHARED PREFS] userId   : $uid');
-        debugPrint('[SHARED PREFS] mobile   : $mob');
-        debugPrint('[SHARED PREFS] deviceId : $deviceId');
-        debugPrint('[SHARED PREFS] type     : $roleId');
-        debugPrint('[SHARED PREFS] latitude : $lat');
-        debugPrint('[SHARED PREFS] longitude: $lng');
-        debugPrint('════════════════════════════════════════');
-
         _message = data['error_msg'] ?? 'Login Successful';
-        debugPrint('[VERIFY OTP] ✅ SUCCESS');
         _setLoading(false);
         return true;
+
       } else {
         _message = data['error_msg'] ?? 'Invalid OTP. Please try again.';
-        debugPrint('[VERIFY OTP] ❌ FAILED — $_message');
+        debugPrint('[VERIFY OTP] ❌ $_message');
         _setLoading(false);
         return false;
       }
-    } catch (e, stack) {
+    } catch (e, st) {
       _message = 'Network error. Please check your connection.';
-      debugPrint('[VERIFY OTP] ❌ EXCEPTION : $e');
-      debugPrint('[VERIFY OTP] STACKTRACE  : $stack');
+      debugPrint('[VERIFY OTP] ❌ EXCEPTION: $e\n$st');
       _setLoading(false);
       return false;
     }
@@ -214,10 +186,10 @@ class OtpVerifyProvider extends ChangeNotifier {
   //  Logout
   // ══════════════════════════════════════════════════════════════════════════
   Future<void> logout() async {
-    debugPrint('[LOGOUT] Clearing session...');
+    debugPrint('[LOGOUT] Clearing SharedPreferences & LocationService cache');
     await SharedPrefService.clearAll();
     LocationService.reset();
-    _ledId   = 0;
+    _ledId   = null;
     _mobile  = '';
     _message = '';
     debugPrint('[LOGOUT] ✅ Done');

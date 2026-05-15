@@ -88,12 +88,13 @@ class ProductScreen extends StatefulWidget {
 class _ProductScreenState extends State<ProductScreen>
     with TickerProviderStateMixin {
 
-  _Tab _activeTab = _Tab.products;
+  // ── CHANGE: default tab is View Products (left) ───────────────────────────
+  _Tab _activeTab = _Tab.viewProducts;
 
   final List<ProductItem> _savedProducts = [];
 
   // ── Collapsible card states ───────────────────────────────────────────────
-  bool _basicExpanded          = true;   // Open by default
+  bool _basicExpanded          = true;
   bool _classificationExpanded = false;
   bool _pricingExpanded        = false;
 
@@ -135,7 +136,7 @@ class _ProductScreenState extends State<ProductScreen>
   void initState() {
     super.initState();
     _basicAnim = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 260), value: 1.0); // Start open
+        vsync: this, duration: const Duration(milliseconds: 260), value: 1.0);
     _classAnim = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 260), value: 0.0);
     _priceAnim = AnimationController(
@@ -152,7 +153,6 @@ class _ProductScreenState extends State<ProductScreen>
     super.dispose();
   }
 
-  /// Accordion-style toggle: Open current card, close others
   void _toggleSectionAccordion(
       bool current,
       Function(bool) setter,
@@ -162,12 +162,10 @@ class _ProductScreenState extends State<ProductScreen>
       ) {
     setter(!current);
     if (!current) {
-      // Opening this card - close others
       anim.forward();
       other1.reverse();
       other2.reverse();
     } else {
-      // Closing this card
       anim.reverse();
     }
   }
@@ -303,8 +301,6 @@ class _ProductScreenState extends State<ProductScreen>
   //  HEADER
   // ════════════════════════════════════════════════════════════════════════
   Widget _buildHeader() {
-
-
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -344,7 +340,6 @@ class _ProductScreenState extends State<ProductScreen>
                             color: Colors.white, fontSize: 19,
                             fontWeight: FontWeight.w800, letterSpacing: 0.3)),
                   ),
-
                 ],
               ),
             ),
@@ -359,17 +354,18 @@ class _ProductScreenState extends State<ProductScreen>
                 ),
                 child: Row(
                   children: [
-                    _tabBtn(
-                      label: 'Add Product',
-                      icon: Icons.add_circle_outline_rounded,
-                      active: _activeTab == _Tab.products,
-                      onTap: () => setState(() => _activeTab = _Tab.products),
-                    ),
+                    // ── CHANGE: View Products LEFT, Add Product RIGHT ─────────
                     _tabBtn(
                       label: 'View Products',
                       icon: Icons.list_alt_rounded,
                       active: _activeTab == _Tab.viewProducts,
                       onTap: () => setState(() => _activeTab = _Tab.viewProducts),
+                    ),
+                    _tabBtn(
+                      label: 'Add Product',
+                      icon: Icons.add_circle_outline_rounded,
+                      active: _activeTab == _Tab.products,
+                      onTap: () => setState(() => _activeTab = _Tab.products),
                     ),
                   ],
                 ),
@@ -432,7 +428,6 @@ class _ProductScreenState extends State<ProductScreen>
       physics: const BouncingScrollPhysics(),
       child: Column(
         children: [
-          // ── 1. Basic Information ──────────────────────────────────────
           _collapsibleCard(
             icon: Icons.info_outline_rounded,
             title: 'Basic Information',
@@ -448,7 +443,6 @@ class _ProductScreenState extends State<ProductScreen>
           ),
           const SizedBox(height: 14),
 
-          // ── 2. Classification ─────────────────────────────────────────
           _collapsibleCard(
             icon: Icons.category_rounded,
             title: 'Classification',
@@ -464,7 +458,6 @@ class _ProductScreenState extends State<ProductScreen>
           ),
           const SizedBox(height: 14),
 
-          // ── 3. Pricing & Stock ────────────────────────────────────────
           _collapsibleCard(
             icon: Icons.price_change_rounded,
             title: 'Pricing & Stock',
@@ -512,7 +505,6 @@ class _ProductScreenState extends State<ProductScreen>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // ── Header ──────────────────────────────────────────────────
           InkWell(
             onTap: onTap,
             borderRadius: expanded
@@ -552,7 +544,6 @@ class _ProductScreenState extends State<ProductScreen>
               ),
             ),
           ),
-          // ── Animated body ────────────────────────────────────────────
           SizeTransition(
             sizeFactor: fade,
             axisAlignment: -1,
@@ -593,15 +584,10 @@ class _ProductScreenState extends State<ProductScreen>
           )),
         ]),
         const SizedBox(height: 12),
-        // ── Full width: Name ──────────────────────────────────────────
-        _PField(label: 'Name', ctrl: _pNameCtrl,
-            hint: 'Product name'),
+        _PField(label: 'Name', ctrl: _pNameCtrl, hint: 'Product name'),
         const SizedBox(height: 12),
-        // ── Full width: Tamil Name ────────────────────────────────────
-        _PField(label: 'Tamil Name', ctrl: _pTamilCtrl,
-            hint: 'தமிழ் பெயர்'),
+        _PField(label: 'Tamil Name', ctrl: _pTamilCtrl, hint: 'தமிழ் பெயர்'),
         const SizedBox(height: 12),
-        // ── Full width: Description ──────────────────────────────────
         _PField(label: 'Description', ctrl: _pDescCtrl,
             hint: 'Enter description', maxLines: 2),
       ],
@@ -643,16 +629,13 @@ class _ProductScreenState extends State<ProductScreen>
           )),
         ]),
         const SizedBox(height: 12),
-        // ── Full width: HSN/SAC ──────────────────────────────────────
         _PField(label: 'HSN/SAC Code', ctrl: _pHsnCtrl,
             hint: 'Enter HSN / SAC code',
             keyboardType: TextInputType.number),
         const SizedBox(height: 12),
-        // ── Full width: Sub Category ─────────────────────────────────
         _PField(label: 'Sub Category', ctrl: _pSubCatCtrl,
             hint: 'Enter sub category'),
         const SizedBox(height: 12),
-        // ── Full width: Brand / Company ──────────────────────────────
         _PField(label: 'Brand / Company', ctrl: _pBrandCtrl,
             hint: 'Enter brand or company name'),
       ],
@@ -801,6 +784,7 @@ class _ProductScreenState extends State<ProductScreen>
       _pUom = ProductUOM.none; _pCategory = ProductCategory.pesticides;
       _basicExpanded = true; _classificationExpanded = false; _pricingExpanded = false;
       _basicAnim.forward(); _classAnim.reverse(); _priceAnim.reverse();
+      // ── After save, go to View Products (left tab) ────────────────────────
       _activeTab = _Tab.viewProducts;
     });
     _showSnack('Product "${p.name}" saved successfully!', _C.primary);
@@ -1367,7 +1351,6 @@ class _ProductScreenState extends State<ProductScreen>
 //  REUSABLE WIDGETS
 // ════════════════════════════════════════════════════════════════════════════
 
-// ── _PField — NO icon inside text field ──────────────────────────────────────
 class _PField extends StatelessWidget {
   final String label, hint;
   final TextEditingController ctrl;
@@ -1399,7 +1382,6 @@ class _PField extends StatelessWidget {
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: const TextStyle(color: _C.textLight, fontSize: 13),
-          // ── No prefixIcon ──
           filled: true,
           fillColor: _C.bg,
           contentPadding:
@@ -1419,7 +1401,6 @@ class _PField extends StatelessWidget {
   );
 }
 
-// ── _PDropField — NO icon inside dropdown ─────────────────────────────────────
 class _PDropField<T> extends StatelessWidget {
   final String label;
   final T? value;
